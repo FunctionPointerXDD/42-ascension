@@ -3,6 +3,7 @@ version: "3.9"
 services:
   app:
     init: true
+    container_name: django
     build:
       context: .
       args:

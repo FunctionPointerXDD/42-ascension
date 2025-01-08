@@ -16,4 +16,6 @@ RUN chmod 755 /home/script.sh
 
 EXPOSE 8000
 
+WORKDIR /app
+
 CMD [ "bash", "/home/script.sh" ]
