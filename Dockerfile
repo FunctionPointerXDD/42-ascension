@@ -12,7 +12,7 @@ COPY ./script.sh /home/script.sh
 
 RUN chmod 755 /home/script.sh
 
-#install this only if it is dev mode
+RUN apt update -y  && apt install -y vim && apt install lsof && apt install net-tools -y
 
 EXPOSE 8000
 
