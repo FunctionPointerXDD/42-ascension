@@ -1,23 +1,20 @@
 #!/bin/bash
 
-if [ -d "/app" ]; then 
+if [ -d "/app/mysite" ]; then 
     echo "/app already present, skipping creation"
 else
-    echo "/app not found, creating..."
-    mkdir -p /app && chmod -R 755 /app
+    echo "/app/mysite not found, creating..."
+    mkdir -p /app/mysite && chmod -R 755 /app/mysite
 fi
 
-DEV=false
+pip install -r /home/requirements.txt
 
-if [ $DEV = true ]; then 
-    pip install -r /home/requirements.dev.txt;
-fi
+cd /app/mysite
 
-if [ -d "/app/mysite" ]; then
-    pip install -r /home/requirements.txt
-    django-admin startproject /app/mysite
-else   
-    echo "/app/mysite already present, skipping installation"
-fi
+django-admin startproject config .
+python manage.py runserver 0.0.0.0:8000
 
-python /app/mysite/manage.py runserver 0.0.0.0:8000
+if [ -d /app/mysite/pybo ]; then
+    echo "/app/mysite/pybo already present , skipping.."
+else
+    django-admin startapp pybo
