@@ -1,5 +1,8 @@
 #!/bin/bash
 
+apt-get update -y && apt-get install vim -y && \
+apt-get install lsof && apt-get install net-tools -y
+
 if [ -d "/app/mysite" ]; then 
     echo "/app already present, skipping creation"
 else

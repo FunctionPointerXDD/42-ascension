@@ -10,23 +10,13 @@ services:
        - DEV=true
     image: jango
     restart: always
+    networks:
+      - pong_net
     ports:
       - "8000:8000"
     volumes:
       - ./app:/app
-    #command: >
-    #sh -c "python mysite/manage.py runserver 0.0.0.0:8000"
-  db:
-    init: true
-    container_name: postgre
-    build:
-      context: .
-      args:
-       - DEV=true
-    image: PostGre
-    restart: always
-    ports:
-      - "5432:5432"
-    volumes:
-      - ./app:/app
 
+networks:
+  pong_net:
+    name: PongGame
