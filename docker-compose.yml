@@ -1,11 +1,25 @@
 version: "3.9"
 
 services:
-  app:
+  proxy:
+    init: true
+    container_name: nginx
+    build:
+      context: ./nginx
+      args:
+       - DEV=true
+    image: nginx_proxy
+    restart: always
+    networks:
+      - pong_net
+    ports:
+      - "80:80"
+      - "443:443"
+  backend-login:
     init: true
     container_name: django
     build:
-      context: .
+      context: ./tutorial
       args:
        - DEV=true
     image: jango
@@ -15,7 +29,22 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ./app:/app
+      - ./tutorial/app:/app
+  backend-profile:
+    init: true
+    container_name: restapi_framework
+    build:
+      context: ./restapi
+      args:
+       - DEV=true
+    image: restapi_image
+    restart: always
+    networks:
+      - pong_net
+    ports:
+      - "8001:8001"
+    volumes:
+      - ./restapi/rest:/rest
 
 networks:
   pong_net:
