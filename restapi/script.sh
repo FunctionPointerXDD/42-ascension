@@ -19,4 +19,4 @@ cd tutorial
 django-admin startapp quickstart
 cd /rest
 python manage.py migrate
-python manage.py runserver 0.0.0.0:8001
+python manage.py runserver 0.0.0.0:8000

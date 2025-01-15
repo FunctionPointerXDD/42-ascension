@@ -15,7 +15,11 @@ services:
     ports:
       - "80:80"
       - "443:443"
-  backend-login:
+    environment:
+      - DOMAIN_NAME=pong.42.fr
+      - CERTS_PATH=/etc/ssl/certs/nginx.crt
+      - CERTS_KEY_PATH=/etc/ssl/private/nginx.pem
+  backend-auth:
     init: true
     container_name: django
     build:
@@ -30,7 +34,7 @@ services:
       - "8000:8000"
     volumes:
       - ./tutorial/app:/app
-  backend-profile:
+  backend-user:
     init: true
     container_name: restapi_framework
     build:
@@ -42,7 +46,7 @@ services:
     networks:
       - pong_net
     ports:
-      - "8001:8001"
+      - "8001:8000"
     volumes:
       - ./restapi/rest:/rest
 
