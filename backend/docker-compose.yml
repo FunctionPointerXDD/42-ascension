@@ -16,6 +16,23 @@ services:
     restart: always
     volumes:
       - ./django:/server
+  websocket:
+    image: websocket
+    container_name: websocket
+    pull_policy: never
+    build: ./websocket
+    ports:
+      - "7600:7600"
+    networks:
+      - postgresdb_network
+    # depends_on:
+    #   db:
+    #     condition: service_healthy
+    tty: true
+    init: true
+    restart: always
+    volumes:
+      - ./websocket:/server
   db:
     image: postgres:17.1-alpine3.20
     # container_name: postgresdb
