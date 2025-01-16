@@ -20,13 +20,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-$twrzd5djei+tb@nu4_cycn%=$s^j9nh8^5k+t!@=bq_(ocd%0'
+SECRET_KEY = 'django-insecure-5dx(=)zd_0ywb^^ljz-0f!)44vj3l0s+alr(-^8=0aj#04w(8+'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
 ALLOWED_HOSTS = []
-
 
 # Application definition
 
@@ -38,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'snippets',
 ]
 
 MIDDLEWARE = [
@@ -122,9 +122,3 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-REST_FRAMEWORK = {
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 10
-}
-
