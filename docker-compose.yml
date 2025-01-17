@@ -46,7 +46,7 @@ services:
     networks:
       - pong_net
     ports:
-      - "8001:8000"
+      - "8001:8001"
     volumes:
       - ./restapi/rest:/rest
 

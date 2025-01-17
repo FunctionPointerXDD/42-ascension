@@ -12,11 +12,11 @@ fi
 
 pip install -r /home/requirements.txt
 
-cd /rest
+cd /rest/tutorial
+## [First Try]
+# django-admin startproject tutorial
+# cd tutorial 
+# python manage.py startapp snippets
 
-django-admin startproject tutorial .
-cd tutorial 
-django-admin startapp quickstart
-cd /rest
 python manage.py migrate
-python manage.py runserver 0.0.0.0:8000
+python manage.py runserver 0.0.0.0:8001

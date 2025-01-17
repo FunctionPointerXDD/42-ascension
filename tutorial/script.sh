@@ -14,11 +14,6 @@ pip install -r /home/requirements.txt
 
 cd /app/mysite
 
-django-admin startproject config .
+# django-admin startproject config .
 python manage.py migrate
 python manage.py runserver 0.0.0.0:8000
-
-# if [ -d /app/mysite/pybo ]; then
-#     echo "/app/mysite/pybo already present , skipping.."
-# else
-#     django-admin startapp pybo

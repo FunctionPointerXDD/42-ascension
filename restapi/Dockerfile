@@ -12,7 +12,7 @@ COPY ./script.sh /home/script.sh
 
 RUN chmod 755 /home/script.sh
 
-EXPOSE 8000
+EXPOSE 8001
 
 WORKDIR /rest
 
