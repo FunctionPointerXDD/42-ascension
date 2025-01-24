@@ -1,4 +1,22 @@
 services:
+  nginx:
+    init: true
+    container_name: nginx
+    build:
+      context: ./nginx
+      args:
+       - DEV=true
+    image: nginx
+    restart: always
+    networks:
+      - postgresdb_network
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - DOMAIN_NAME=pong.42.fr
+      - CERTS_PATH=/etc/ssl/certs/nginx.crt
+      - CERTS_KEY_PATH=/etc/ssl/private/nginx.pem
   backend:
     image: backend
     container_name: backend
@@ -16,6 +34,8 @@ services:
     restart: always
     volumes:
       - ./django:/server
+    env_file:
+      - .env
   jwt:
     image: jwt
     container_name: jwt
@@ -33,6 +53,30 @@ services:
     restart: always
     volumes:
       - ./jwt:/server
+    env_file:
+      - .env
+  websocket:
+    image: websocket
+    container_name: websocket
+    pull_policy: never
+    build: ./websocket
+    ports:
+      - "7600:7600"
+    networks:
+      - postgresdb_network
+    depends_on:
+      db:
+        condition: service_healthy
+    tty: true
+    init: true
+    restart: always
+    volumes:
+      - ./websocket:/server
+    environment:
+      - WEBSOCKET_WORKER=${WEBSOCKET_WORKER}
+      - WEBSOCKET_THREAD=${WEBSOCKET_THREAD}
+    env_file:
+      - .env
   auth:
     image: auth
     container_name: auth
@@ -50,6 +94,25 @@ services:
     restart: always
     volumes:
       - ./auth:/server
+    env_file:
+      - .env
+  user:
+    init: true
+    container_name: user
+    build:
+      context: ./user
+      args:
+       - DEV=true
+    image: user
+    restart: always
+    networks:
+      - postgresdb_network
+    ports:
+      - "8300:8300"
+    volumes:
+      - ./user/server:/server
+    env_file:
+      - .env
   db:
     image: postgres:17.1-alpine3.20
     container_name: postgresdb
@@ -69,13 +132,6 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
-  test-container:
-    image: ubuntu:24.04
-    container_name: test-container
-    restart: always
-    networks:
-      - postgresdb_network
-    tty: true
   prometheus:
     build: ./prometheus
     volumes:
