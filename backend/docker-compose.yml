@@ -34,8 +34,8 @@ services:
     restart: always
     volumes:
       - ./django:/server
-    env_file:
-      - .env
+    # env_file:
+    #   - .env
   jwt:
     image: jwt
     container_name: jwt
@@ -53,8 +53,8 @@ services:
     restart: always
     volumes:
       - ./jwt:/server
-    env_file:
-      - .env
+    # env_file:
+    #   - .env
   websocket:
     image: websocket
     container_name: websocket
@@ -75,8 +75,8 @@ services:
     environment:
       - WEBSOCKET_WORKER=${WEBSOCKET_WORKER}
       - WEBSOCKET_THREAD=${WEBSOCKET_THREAD}
-    env_file:
-      - .env
+    # env_file:
+    #   - .env
   auth:
     image: auth
     container_name: auth
@@ -94,8 +94,8 @@ services:
     restart: always
     volumes:
       - ./auth:/server
-    env_file:
-      - .env
+    # env_file:
+    #   - .env
   user:
     init: true
     container_name: user
@@ -111,8 +111,8 @@ services:
       - "8300:8300"
     volumes:
       - ./user/server:/server
-    env_file:
-      - .env
+    # env_file:
+    #   - .env
   db:
     image: postgres:17.1-alpine3.20
     container_name: postgresdb
