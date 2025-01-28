@@ -2,10 +2,7 @@ services:
   nginx:
     init: true
     container_name: nginx
-    build:
-      context: ./nginx
-      args:
-       - DEV=true
+    build: ./nginx
     image: nginx
     restart: always
     networks:
@@ -99,10 +96,7 @@ services:
   user:
     init: true
     container_name: user
-    build:
-      context: ./user
-      args:
-       - DEV=true
+    build: ./user
     image: user
     restart: always
     networks:
@@ -111,8 +105,8 @@ services:
       - "8300:8300"
     volumes:
       - ./user/server:/server
-    # env_file:
-    #   - .env
+    env_file:
+      - ./user/.env
   db:
     image: postgres:17.1-alpine3.20
     container_name: postgresdb
