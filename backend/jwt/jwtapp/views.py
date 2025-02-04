@@ -63,10 +63,20 @@ def make_new_jwt(req: Request):
     return JsonResponse({"access_token": access_token, "refresh_token": refresh_token})
 
 
+last_names = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Miller', 'Davis', 'Garcia', 'Taylor', 'Anderson']
+current_index = 0
+
+def generate_random_name():
+    global current_index
+    name = last_names[current_index]
+    current_index = (current_index + 1) % len(last_names)
+    return name
+
 @api_post
 def make_user(req: HttpRequest):
+    random_name=generate_random_name()
     user_obj = User.objects.create(
-        username="asdf", profile_url="url", created_at=datetime.datetime.now()
+        username=random_name, profile_url="url", created_at=datetime.datetime.now()
     )
     user_obj.save()
     return JsonResponse(model_to_dict(user_obj))
