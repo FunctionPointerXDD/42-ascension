@@ -1,5 +1,5 @@
 .env
-*.pyc
+.pyc
 test.sh
 token.txt
 prometheus
