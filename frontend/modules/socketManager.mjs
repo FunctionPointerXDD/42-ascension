@@ -85,7 +85,8 @@ export class RoomSocketManager {
       RoomSocketManager.participantList = list;
 
       const adminName = list.people[0].user_name;
-      if (myName === adminName) RoomSocketManager.isOperator = true;
+      if (RoomSocketManager.myName === adminName)
+        RoomSocketManager.isOperator = true;
 
       if (
         PageManager.currentpageStatus.page ===
