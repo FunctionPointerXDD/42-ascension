@@ -152,8 +152,23 @@ def _get_user_id_from_jwt(jwt) -> int:
     return json["user_id"]
 
 
+def get_current_status() -> str:
+    object_all = TempMatchRoomUser.objects.all()
+    ret = "temp_match_room_user = "
+    for user in object_all:
+        ret += f"[id={user.user.id}, online={user.is_online}, room_name={user.temp_match_room.room_name}], "
+    ret += " // temp_match_user = "
+    object_all2 = TempMatchUser.objects.all()
+    for user in object_all2:
+        ret += f"[id={user.user.id}, temp_match={user.temp_match.id}]"
+    return ret
+
+
 def on_connect(sid, auth):
     logger.info(f"connected sid={sid}")
+
+    current_status = get_current_status()
+    logger.info(f"current status={current_status}")
 
     if "ai" in auth:
         jwt = get_str(auth, "jwt")
@@ -290,16 +305,6 @@ def init_matches(
     is_with_ai: bool = False,
 ):
     real_users = []
-    for u in users:
-        match_id = u.temp_match.id
-        if match_id not in match_dict.get_dict():
-            match_dict[match_id] = Match(u.temp_match, is_with_ai=is_with_ai)
-
-        user = RealUser(is_ai=False, id=u.user.id, name="", sid="")
-        real_users.append(user)
-
-        logger.info(user)
-        match_dict[match_id].user_decided(user)
 
     for m1, m2 in matches:
         match_id1 = m1.id
@@ -312,5 +317,15 @@ def init_matches(
 
         match_dict[match_id1].add_listener(match_dict[match_id2])
         match_dict[match_id2].add_listener(match_dict[match_id1])
+
+    for u in users:
+        match_id = u.temp_match.id
+        if match_id not in match_dict.get_dict():
+            match_dict[match_id] = Match(u.temp_match, is_with_ai=is_with_ai)
+
+        user = RealUser(is_ai=False, id=u.user.id, name="", sid="")
+        real_users.append(user)
+
+        match_dict[match_id].user_decided(user)
 
     waiting_dict.add(room_name, Waiting(real_users, room_name))

@@ -1,5 +1,6 @@
 import logging
 import threading
+import json
 from typing import Dict
 
 from exceptions.CustomException import InternalException
@@ -38,3 +39,10 @@ class UserDict:
                 raise InternalException()
             self.logger.info(f"Trying to find user_id={user_id} succeeded")
             return self.dict[user_id]
+
+    def debug(self) -> str:
+        ret = ""
+        with self.lock:
+            for k, v in self.dict.items():
+                ret += f"[{k}, {json.dumps(v.to_json())}] "
+        return ret

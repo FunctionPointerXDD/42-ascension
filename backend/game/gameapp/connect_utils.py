@@ -3,15 +3,16 @@ from typing import TYPE_CHECKING
 
 from exceptions.CustomException import InternalException
 from gameapp.db_utils import clear_room
-from gameapp.envs import GAMEAI_URL, JWT_URL
+from gameapp.envs import GAMEAI_URL
 from gameapp.sio import sio_disconnect
 from gameapp.match_objects import Match, match_dict
 from gameapp.requests import post
 from gameapp.utils import get_match_user_or_none
 
+from gameapp.match_objects.matchuser import RealUser
+
 if TYPE_CHECKING:
     from gameapp.models import TempMatchUser
-    from match_objects.matchuser import RealUser
 
 
 logger = logging.getLogger(__name__)
