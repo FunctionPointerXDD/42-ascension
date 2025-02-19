@@ -72,9 +72,7 @@ export const runPongGame = () => {
   window.addEventListener("resize", () => {
     onWindowResize(camera, renderer, composer);
   });
-  window.addEventListener("popstate", () => {
-    removeKeyEvent();
-  });
+  window.addEventListener("popstate", removeKeyEvent);
 
   // 버튼 클릭 시 게임 재시작
   restartButton.addEventListener("click", () => {
