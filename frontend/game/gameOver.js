@@ -4,6 +4,10 @@ let g_paddle2;
 let g_opponent;
 let g_gameOver;
 
+export function setGameOver(value) {
+  g_gameOver = value;
+}
+
 export function updateGamePopup(opponent, lastGame) {
   g_opponent = opponent;
   showGameOver(g_winner, g_paddle1, g_paddle2, g_opponent, lastGame);
