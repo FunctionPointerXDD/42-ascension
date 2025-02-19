@@ -7,7 +7,7 @@ import {
   handleKeyUp,
 } from "./animation.js";
 import { updateScore } from "./scoreboard.js";
-import { showGameOver, updateGamePopup } from "./gameOver.js";
+import { showGameOver, updateGamePopup, setGameOver } from "./gameOver.js";
 import { JWT } from "../modules/authentication/jwt.mjs";
 import { clearBody } from "../modules/page/lowRankElements.mjs";
 import { LOGIN_EXPIRED_MSG } from "../modules/authentication/globalConstants.mjs";
@@ -119,6 +119,7 @@ export const runPongGame = () => {
     socket.on("resetPositions", resetPositions);
 
     socket.on("gameOver", (data) => {
+      setGameOver(true);
       showGameOver(
         data.winner === paddleId,
         data.paddle1,
