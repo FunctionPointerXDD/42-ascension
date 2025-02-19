@@ -9,6 +9,7 @@ import {
 import { updateScore } from "./scoreboard.js";
 import { showGameOver, updateGamePopup, setGameOver } from "./gameOver.js";
 import { JWT } from "../modules/authentication/jwt.mjs";
+import { MainPage } from "../modules/page/main.mjs";
 import { clearBody } from "../modules/page/lowRankElements.mjs";
 import { LOGIN_EXPIRED_MSG } from "../modules/authentication/globalConstants.mjs";
 
