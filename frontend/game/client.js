@@ -87,6 +87,7 @@ export const runPongGame = () => {
   function handleSocketEvents(socket, scene) {
     socket.on("init", (data) => {
       paddleId = data.paddleId;
+      setGameOver(false);
       stopAnimation();
       if (keyDownHandler) window.removeEventListener("keydown", keyDownHandler);
       if (keyUpHandler) window.removeEventListener("keyup", keyUpHandler);
