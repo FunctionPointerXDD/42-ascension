@@ -1,9 +1,16 @@
 let g_winner;
 let g_paddle1;
 let g_paddle2;
+let g_opponent;
+let g_gameOver = false;
+
+export function setGameOver(value) {
+  g_gameOver = value;
+}
 
 export function updateGamePopup(opponent, lastGame) {
-  showGameOver(g_winner, g_paddle1, g_paddle2, opponent, lastGame);
+  g_opponent = opponent;
+  showGameOver(g_winner, g_paddle1, g_paddle2, g_opponent, lastGame);
 }
 
 export function showGameOver(winner, paddle1, paddle2, nextOpponent, lastGame) {
@@ -14,6 +21,8 @@ export function showGameOver(winner, paddle1, paddle2, nextOpponent, lastGame) {
   g_winner = winner;
   g_paddle1 = paddle1;
   g_paddle2 = paddle2;
+
+  if (g_gameOver === false) return;
 
   gameResult.innerHTML = `
   <div style="font-size: 48px; font-weight: 700; margin-bottom: 20px; color: ${
@@ -29,7 +38,7 @@ export function showGameOver(winner, paddle1, paddle2, nextOpponent, lastGame) {
   </div>
 
   ${
-    lastGame === false
+    lastGame === false && winner === true
       ? `
       <div style="margin-top: 30px; text-align: center;">
         <div style="font-size: 20px; font-weight: 600; margin-bottom: 10px; color: #333;">
@@ -46,7 +55,7 @@ export function showGameOver(winner, paddle1, paddle2, nextOpponent, lastGame) {
 
   gameOverPopup.style.display = "flex";
 
-  if (lastGame === true) {
+  if (lastGame === true || winner === false) {
     setButtonText("나가기");
   } else {
     setButtonText("다음 게임");
@@ -66,7 +75,4 @@ export function showGameOver(winner, paddle1, paddle2, nextOpponent, lastGame) {
   function setButtonText(newText) {
     document.getElementById("restartButton").textContent = newText;
   }
-
-  // 초기 설정
-  setButtonText("나가기");
 }
