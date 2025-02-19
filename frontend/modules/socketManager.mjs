@@ -14,6 +14,7 @@ export class RoomSocketManager {
   static participantList = null;
   static maxNumOfParticipant = null;
   static isOperator = false;
+  static myName = null;
 
   static connect = () => {
     RoomSocketManager.socket = io("/", {
@@ -24,6 +25,9 @@ export class RoomSocketManager {
     });
     RoomSocketManager.socket.on("connect", () => {
       alert("게임 로비에 연결되었습니다.");
+      RoomSocketManager.socket.emit("name", null, (reply) => {
+        RoomSocketManager.myName = reply.name;
+      });
     });
     RoomSocketManager.#onDisconnect();
     RoomSocketManager.#onRoomListEvent();
@@ -80,6 +84,9 @@ export class RoomSocketManager {
     RoomSocketManager.socket.on("room_changed", (list) => {
       RoomSocketManager.participantList = list;
 
+      const adminName = list.people[0].user_name;
+      if (myName === adminName) RoomSocketManager.isOperator = true;
+
       if (
         PageManager.currentpageStatus.page ===
         PageManager.pageStatus.gameQueue.page
@@ -132,6 +139,8 @@ export class RoomSocketManager {
       null,
       RoomSocketManager.#alertWhenError
     );
+
+    RoomSocketManager.isOperator = false;
     RoomSocketManager.participantList = null;
     RoomSocketManager.maxNumOfParticipant = null;
   };
@@ -149,6 +158,8 @@ export class RoomSocketManager {
     RoomSocketManager.roomList = null;
     RoomSocketManager.participantList = null;
     RoomSocketManager.maxNumOfParticipant = null;
+    RoomSocketManager.isOperator = false;
+    RoomSocketManager.myName = null;
   };
 
   static getNumOfParticipants = () => {
