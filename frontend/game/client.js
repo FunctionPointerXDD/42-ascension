@@ -72,6 +72,9 @@ export const runPongGame = () => {
   window.addEventListener("resize", () => {
     onWindowResize(camera, renderer, composer);
   });
+  window.addEventListener("popstate", () => {
+    removeKeyEvent();
+  });
 
   // 버튼 클릭 시 게임 재시작
   restartButton.addEventListener("click", () => {
@@ -85,13 +88,17 @@ export const runPongGame = () => {
 
   handleSocketEvents(socket, scene);
 
+  function removeKeyEvent() {
+    if (keyDownHandler) window.removeEventListener("keydown", keyDownHandler);
+    if (keyUpHandler) window.removeEventListener("keyup", keyUpHandler);
+  }
+
   function handleSocketEvents(socket, scene) {
     socket.on("init", (data) => {
       paddleId = data.paddleId;
       setGameOver(false);
       stopAnimation();
-      if (keyDownHandler) window.removeEventListener("keydown", keyDownHandler);
-      if (keyUpHandler) window.removeEventListener("keyup", keyUpHandler);
+      removeKeyEvent();
       keyDownHandler = (event) => handleKeyDown(event, paddleId);
       keyUpHandler = (event) => handleKeyUp(event, paddleId);
       window.addEventListener("keydown", keyDownHandler);
@@ -138,6 +145,7 @@ export const runPongGame = () => {
     });
 
     socket.on("disconnect", (reason) => {
+      removeKeyEvent();
       console.log("서버와의 연결이 종료되었습니다.", reason);
       alert(reason);
     });
