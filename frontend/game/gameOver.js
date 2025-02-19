@@ -2,7 +2,7 @@ let g_winner;
 let g_paddle1;
 let g_paddle2;
 let g_opponent;
-let g_gameOver;
+let g_gameOver = false;
 
 export function setGameOver(value) {
   g_gameOver = value;
@@ -22,7 +22,7 @@ export function showGameOver(winner, paddle1, paddle2, nextOpponent, lastGame) {
   g_paddle1 = paddle1;
   g_paddle2 = paddle2;
 
-  if (g_gameOver === false || winner === false) return;
+  if (g_gameOver === false) return;
 
   gameResult.innerHTML = `
   <div style="font-size: 48px; font-weight: 700; margin-bottom: 20px; color: ${
