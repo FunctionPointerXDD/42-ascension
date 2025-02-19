@@ -159,5 +159,5 @@ LOGGING = {
             "style": "{",
         },
     },
-    "loggers": {"": {"level": "INFO", "handlers": ["file", "stdout"]}},
+    "loggers": {"": {"level": "DEBUG", "handlers": ["file", "stdout"]}},
 }

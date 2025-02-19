@@ -72,14 +72,14 @@ class MatchProcess(threading.Thread):
 
     def set_paddle(self, user_id: int, paddle_direction: float):
         with self.lock:
-            self.logger.info(
-                f"user_id={user_id}, room_name={self.room_name}, direction={paddle_direction}"
-            )
+            # self.logger.debug(
+            #     f"user_id={user_id}, room_name={self.room_name}, direction={paddle_direction}"
+            # )
             idx = self.__get_idx(user_id)
 
-        self.logger.debug(
-            f"user_id={user_id}, idx={idx}, paddle_direction={paddle_direction}"
-        )
+        # self.logger.debug(
+        #     f"user_id={user_id}, idx={idx}, paddle_direction={paddle_direction}"
+        # )
         if paddle_direction == 0:
             self.logger.info(f"user_id={user_id}, paddle_direction is zero, returning")
             return
@@ -88,12 +88,12 @@ class MatchProcess(threading.Thread):
             paddle_pos = self.paddle[idx]
 
         normalized_direction = PADDLE_MOVE if paddle_direction > 0 else -PADDLE_MOVE
-        self.logger.debug(
-            f"user_id={user_id} paddle_pos was={paddle_pos} normalized_direction={normalized_direction}"
-        )
+        # self.logger.debug(
+        #     f"user_id={user_id} paddle_pos was={paddle_pos} normalized_direction={normalized_direction}"
+        # )
         x = paddle_pos + normalized_direction
         x = max(-GAME_RIGHTEND, min(GAME_RIGHTEND, x))
-        self.logger.debug(f"user_id={user_id}, prev val={paddle_pos}, become x={x}")
+        # self.logger.debug(f"user_id={user_id}, prev val={paddle_pos}, become x={x}")
 
         with self.lock:
             self.paddle[idx] = x

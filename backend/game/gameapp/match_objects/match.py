@@ -62,18 +62,20 @@ class Match:
         self.emit_opponent()
 
     def emit_opponent(self):
-        sio_emit(
-            OPPONENT_EVENT,
-            {"opponent": self.opponent, "lastGame": False},
-            self.room_name,
-        )
+        if self.match_process is not None and self.match_process.game_over:
+            sio_emit(
+                OPPONENT_EVENT,
+                {"opponent": self.opponent, "lastGame": False},
+                self.room_name,
+            )
 
     def emit_final_opponent(self):
-        sio_emit(
-            OPPONENT_EVENT,
-            {"opponent": self.opponent, "lastGame": True},
-            self.room_name,
-        )
+        if self.match_process is not None and self.match_process.game_over:
+            sio_emit(
+                OPPONENT_EVENT,
+                {"opponent": self.opponent, "lastGame": True},
+                self.room_name,
+            )
 
     def add_listener(self, sibling: "Match"):
         self.logger.debug(
@@ -378,8 +380,9 @@ class Match:
         if self.match_process is not None:
             self.match_process.stop()
 
-        ai_sid = self.users[1]["sid"]
-        sio_disconnect(ai_sid)
+        if len(self.users) == 2:
+            ai_sid = self.users[1]["sid"]
+            sio_disconnect(ai_sid)
 
         TempMatchRoomUser.objects.filter(user_id=user["id"]).delete()
         TempMatchUser.objects.filter(user_id=user["id"]).delete()

@@ -59,7 +59,7 @@ def paddle_move(sid: str, data: dict[str, Any]):
 
 
 @event_on("nextGame", namespace=NAMESPACE)
-def next_game(sid: str, data: dict[str, Any]):
+def next_game(sid: str):
     on_next_game(sid)
 
 
