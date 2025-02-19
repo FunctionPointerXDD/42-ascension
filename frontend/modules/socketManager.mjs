@@ -139,6 +139,8 @@ export class RoomSocketManager {
       null,
       RoomSocketManager.#alertWhenError
     );
+
+    RoomSocketManager.isOperator = false;
     RoomSocketManager.participantList = null;
     RoomSocketManager.maxNumOfParticipant = null;
   };
