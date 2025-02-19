@@ -175,14 +175,10 @@ export const clearExceptNavBar = () => {
     case PageManager.pageStatus.gameQueue.page:
       GameQueuePage.destroy();
       break;
-    case PageManager.pageStatus.login.page:
-    case PageManager.pageStatus.twoFA.page:
     case PageManager.pageStatus.pong.page:
     case PageManager.pageStatus.aiMatch.page:
-      console.error(
-        "You should not call clearExceptNavBar method on this case."
-      );
+    case PageManager.pageStatus.login.page:
+    case PageManager.pageStatus.twoFA.page:
       break;
   }
 };
-
