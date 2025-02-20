@@ -48,6 +48,7 @@ class Match:
 
         self.users: list[MatchUser] = []
         self.online: list[bool] = []
+        self.disconnected: list[bool] = []
 
         self.match_process: MatchProcess | None = None
         self.waiting_process = WaitingProcess(self)
@@ -204,12 +205,15 @@ class Match:
 
         sio_emit(GAME_OVER_EVENT, game_over_data, self.room_name)
 
-        resp = post(
-            f"{USER_URL}/_internal/dashboard",
-            json=json_obj,
-        )
-        if not resp.ok:
-            self.logger.error(f"resp is not ok, resp = {resp.text}")
+        try:
+            resp = post(
+                f"{USER_URL}/_internal/dashboard",
+                json=json_obj,
+            )
+            if not resp.ok:
+                self.logger.error(f"resp is not ok, resp = {resp.text}")
+        except:
+            pass
 
         if self.match.winner_match is not None:
             self.logger.info(f"winner match id: {self.match.winner_match.id}")
@@ -241,7 +245,6 @@ class Match:
             if "name" in winner:
                 listener.emit_opponent_on_listen(winner["name"])
 
-        match_dict.delete_match_id(self.match.id)
         self.stage = MatchStage.FINISHED
 
     def get_match_name(self):
@@ -278,6 +281,7 @@ class Match:
 
             self.users.append(user)
             self.online.append(False)
+            self.disconnected.append(False)
 
             if len(self.users) == 2 and self.online[0]:
                 self.__set_stage_waiting()
@@ -389,6 +393,14 @@ class Match:
 
     def user_disconnected(self, user: RealUser):
         with self.lock:
+            idx = self.__get_user_idx(user)
+            if idx == -1:
+                self.logger.info(
+                    f"user is disconnected, but user={user['id']} could not be found in match={self.room_name}"
+                )
+                return
+            self.disconnected[idx] = True
+
             if self.is_with_ai:
                 return self.__disconnect_with_ai(user)
             self.logger.info(f"user={user} is disconnected, current stage={self.stage}")
@@ -400,13 +412,6 @@ class Match:
                 self.logger.error(f"self.stage={self.stage}, but user is disconnected!")
                 return
             elif self.stage == MatchStage.WAITING:
-                idx = self.__get_user_idx(user)
-                if idx == -1:
-                    self.logger.info(
-                        f"user is disconnected, but user={user['id']} could not be found in match={self.room_name}"
-                    )
-                    return
-
                 if self.online[idx]:
                     self.waiting_process.stop()
                     self.stage = MatchStage.FINISHED
@@ -414,11 +419,14 @@ class Match:
             elif self.stage == MatchStage.MATCH:
                 assert self.match_process is not None
 
-                loser_idx = self.__get_user_idx(user)
                 self.match_process.stop()
                 self.stage = MatchStage.FINISHED
-                self.__set_lose(loser_idx)
-                self.__set_win(1 - loser_idx)
+                self.__set_lose(idx)
+                self.__set_win(1 - idx)
+
+            disconnected_cnt = sum([1 if t else 0 for t in self.disconnected])
+        if disconnected_cnt == 2:
+            match_dict.delete_match_id(self.match.id)
 
     def alert_winner(self, winner_idx: int):
         with self.lock:
@@ -438,12 +446,13 @@ class Match:
 def match_decided(match_dict: "MatchDict", user: RealUser, match: TempMatch):
     room_id = match.id
 
-    # match_dict.set_if_not_exists(room_id, match)
-    with match_dict.lock:
-        if room_id not in match_dict.get_dict():
-            match_dict.get_dict()[room_id] = Match(match)
+    match_dict.set_if_not_exists(room_id, Match(match))
+    # with match_dict.lock:
+    #     if room_id not in match_dict.get_dict():
+    #         match_dict.get_dict()[room_id] = Match(match)
 
-    match_dict[room_id].user_decided(user)
+    match_dict.user_decided(room_id, user)
+    # match_dict[room_id].user_decided(user)
 
 
 def get_score(user_id: int, match_id: int):

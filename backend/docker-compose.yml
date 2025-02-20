@@ -197,6 +197,7 @@ services:
       - OTP_SECRET=${OTP_SECRET}
       - OTP_ISSUER=${OTP_ISSUER}
       - FRONTEND_URL=${FRONTEND_URL}
+      - VALID_WINDOW=${VALID_WINDOW}
   user:
     init: true
     image: user

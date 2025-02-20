@@ -56,7 +56,7 @@ export class RoomSocketManager {
   static disconnect = () => {
     if (RoomSocketManager.socket !== null) {
       RoomSocketManager.socket.disconnect();
-      RoomSocketManager.#whenDisconnect();
+      // RoomSocketManager.#whenDisconnect();
     }
   };
 
@@ -161,6 +161,7 @@ export class RoomSocketManager {
     RoomSocketManager.maxNumOfParticipant = null;
     RoomSocketManager.isOperator = false;
     RoomSocketManager.myName = null;
+    alert("room socket disconnected")
   };
 
   static getNumOfParticipants = () => {

@@ -114,13 +114,17 @@ class MatchProcess(threading.Thread):
         def start_game_func():
             initial_speed = INITIAL_SPEED
             self.ball["vx"] = initial_speed * (
-                (int(random.random() * 10000) % 2) * 2 - 1
+                (random.random() - 0.5) * 0.2
             )
+            if -0.05 < self.ball["vx"] < 0.05:
+                if self.ball["vx"] < 0:
+                    self.ball["vx"] = -0.05
+                else:
+                    self.ball["vx"] = 0.05
             if self.is_with_ai:
-                self.ball["vy"] = initial_speed if scorer_idx == 0 else -initial_speed
-            else:
                 self.ball["vy"] = -initial_speed
-            self.emit_ball_update()
+            else:
+                self.ball["vy"] = initial_speed if scorer_idx == 0 else -initial_speed
 
         t = threading.Timer(3.0, start_game_func)
         t.start()
