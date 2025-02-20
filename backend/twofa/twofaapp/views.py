@@ -67,8 +67,7 @@ def post_code(req: Request, data: Dict[str, Any]):
 
     if "skip" not in data or data["skip"] == False:
         totp_secret = user_info.twofa_secret
-        totp_now = pyotp.TOTP(totp_secret).now()
-        if totp_now != code:
+        if not pyotp.TOTP(totp_secret).verify(code, valid_window=30):
             raise BadRequestFieldException("code")
 
     user_info.twofa_passed = True

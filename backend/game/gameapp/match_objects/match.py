@@ -224,7 +224,7 @@ class Match:
 
             # Dependency on CASCADE
             self.logger.info(
-                f"Deleting match room name ={self.match.match_room.room_name}"
+                f"Deleting match room name = {self.match.match_room.room_name}"
             )
             TempMatchRoom.objects.filter(
                 room_name=self.match.match_room.room_name
@@ -437,8 +437,11 @@ class Match:
 
 def match_decided(match_dict: "MatchDict", user: RealUser, match: TempMatch):
     room_id = match.id
-    if room_id not in match_dict.get_dict():
-        match_dict[room_id] = Match(match)
+
+    # match_dict.set_if_not_exists(room_id, match)
+    with match_dict.lock:
+        if room_id not in match_dict.get_dict():
+            match_dict.get_dict()[room_id] = Match(match)
 
     match_dict[room_id].user_decided(user)
 

@@ -30,6 +30,7 @@ logger = logging.getLogger(__name__)
 def sio_emit(event: str, data: dict[str, Any], to: str):
     if event != UPDATE_BALL_EVENT and event != UPDATE_PADDLE_EVENT:
         logger.debug(f"sio_emit: event={event}, data={json.dumps(data)}, to={to}")
+
     sio.emit(event, data, to=to, namespace=NAMESPACE)
 
 

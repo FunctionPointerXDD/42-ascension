@@ -56,7 +56,7 @@ class AiClient:
 
         self.net = neat.nn.FeedForwardNetwork.create(best_genome, config)
 
-        self.sio = socketio.Client(logger=True, engineio_logger=True)
+        self.sio = socketio.Client()
 
         self.g_paddle_x = 0
 
@@ -75,7 +75,7 @@ class AiClient:
 
         @self.sio_event("updateBall")
         def updateBall(ball_data):
-            logger.info(f"ai got updateBall, data={json.dumps(ball_data)}")
+            # logger.info(f"ai got updateBall, data={json.dumps(ball_data)}")
             if not self.sio.connected or self.paddle_id is None:
                 return
 

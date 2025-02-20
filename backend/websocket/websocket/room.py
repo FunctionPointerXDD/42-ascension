@@ -76,5 +76,3 @@ class Room:
         if not self.is_valid():
             return False
         return self.user_list[0] == user_id
-    
-    

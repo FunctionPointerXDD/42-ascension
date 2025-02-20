@@ -124,7 +124,7 @@ ROOM_MANAGER = RoomManager()
 user_dict = UserDict()
 
 
-def get_session_info(sid) -> int:
+def get_session_info(sid: str) -> int:
     with sio.session(sid) as sess:
         user_id: int | None = sess["user_id"]
 
@@ -154,6 +154,7 @@ def _connect(sid: str, environ, auth: dict[str, Any]):
 
     with sio.session(sid) as sess:
         sess["user_id"] = user_id
+        sess["user_name"] = user_name
 
     user_add_ret = user_dict.add(user_id, RoomUser(sid, user_id, user_name))
     if not user_add_ret:
@@ -197,6 +198,14 @@ def disconnect(sid: str, reason):
 
     if room_changed:
         sio_emit(ROOM_LIST_EVENT, ROOM_MANAGER.room_list_to_json(), to=ROOM_LISTENERS)
+
+
+@event_on("name")
+def sio_name(sid: str, data: dict[str, Any] | None = None):
+    with sio.session(sid) as sess:
+        user_name = sess["user_name"]
+
+    return {"name": user_name}
 
 
 @event_on("make_room")
