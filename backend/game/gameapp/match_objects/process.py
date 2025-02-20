@@ -12,6 +12,7 @@ from gameapp.sio import (
     UPDATE_BALL_EVENT,
     UPDATE_PADDLE_EVENT,
     UPDATE_SCORE_EVENT,
+    INIT_EVENT,
     sio_emit,
 )
 from gameapp.utils import get_match_name, now
@@ -113,9 +114,7 @@ class MatchProcess(threading.Thread):
 
         def start_game_func():
             initial_speed = INITIAL_SPEED
-            self.ball["vx"] = initial_speed * (
-                (random.random() - 0.5) * 0.2
-            )
+            self.ball["vx"] = initial_speed * ((random.random() - 0.5) * 0.2)
             if -0.05 < self.ball["vx"] < 0.05:
                 if self.ball["vx"] < 0:
                     self.ball["vx"] = -0.05
@@ -239,6 +238,24 @@ class MatchProcess(threading.Thread):
             if self.__is_not_decided():
                 return
         self.__start_hook()
+
+        sio_emit(
+            INIT_EVENT,
+            {
+                "paddleId": "paddle1",
+                "opponent": self.users[1]["name"],
+            },
+            to=self.users[0]["sid"],
+        )
+
+        sio_emit(
+            INIT_EVENT,
+            {
+                "paddleId": "paddle2",
+                "opponent": self.users[0]["name"],
+            },
+            to=self.users[1]["sid"],
+        )
 
         self.event.wait(3)
 

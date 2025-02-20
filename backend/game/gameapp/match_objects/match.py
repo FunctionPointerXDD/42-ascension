@@ -22,7 +22,7 @@ from gameapp.sio import (
 )
 from gameapp.utils import get_match_name, now
 from .matchdict import match_dict
-from .matchuser import AI_ID, AiUser, MatchUser, RealUser
+from .matchuser import AI_ID, AI_NAME, AiUser, MatchUser, RealUser
 from .process import MatchProcess
 from .timeout import WaitingProcess
 
@@ -304,11 +304,6 @@ class Match:
                 )
                 return True
 
-            sio_emit(
-                INIT_EVENT,
-                {"paddleId": "paddle1" if idx == 0 else "paddle2"},
-                to=user["sid"],
-            )
             sio_enter_room(user["sid"], self.room_name)
             self.users[idx] = user
             self.online[idx] = True
@@ -350,11 +345,11 @@ class Match:
                 f"When AI is connected, self.users len is not 1! users={self.users}"
             )
 
-        self.users.append(AiUser(is_ai=True, sid=sid, id=AI_ID))
+        self.users.append(AiUser(is_ai=True, sid=sid, id=AI_ID, name=AI_NAME))
         self.online.append(True)
 
         with self.lock:
-            sio_emit(INIT_EVENT, {"paddleId": "paddle2"}, to=sid)
+            sio_emit(INIT_EVENT, {"paddleId": "paddle2", "opponent": self.users[0]["name"]}, to=sid)
             sio_enter_room(sid, self.room_name)
 
             self.logger.info("waiting process stop")
