@@ -15,12 +15,15 @@ import { LOGIN_EXPIRED_MSG } from "../modules/authentication/globalConstants.mjs
 
 export let socket = null;
 export const gameSocketDisconnect = () => {
-  if (socket != null) {
+  if (socket !== null) {
     socket.disconnect();
     socket = null;
   }
 };
 export const gameSocketConnect = () => {
+  if (socket !== null)
+    gameSocketDisconnect();
+  
   socket = io("/game", {
     auth: {
       jwt: JWT.getJWTTokenFromCookie().accessToken,
@@ -30,21 +33,26 @@ export const gameSocketConnect = () => {
 
   socket.on("connect", () => {
     alert("게임에 연결되었습니다.");
+    console.log("게임에 연결되었습니다.")
   });
 
   socket.on("connect_error", async (error) => {
     alert("게임 연결 중 문제가 발생하였습니다.");
+    console.log("게임 연결 중 문제가 발생하였습니다.");
     alert("재연결을 시도합니다.");
+    console.log("재연결을 시도합니다.");
     if (error.message === "jwt.expired") {
       try {
         await JWT.getNewToken();
         gameSocketConnect();
       } catch (e) {
         alert(`${LOGIN_EXPIRED_MSG}(${e})`);
+        console.log(`${LOGIN_EXPIRED_MSG}(${e})`);
         logout();
       }
     } else {
       alert(`재연결에 실패하였습니다. 메인 페이지로 이동합니다(${error})`);
+      console.log(`재연결에 실패하였습니다. 메인 페이지로 이동합니다(${error})`);
       socket = null;
       clearBody();
       MainPage.renderAndPushHistory();
@@ -79,6 +87,7 @@ export const runPongGame = () => {
     if (restartButton.textContent === "나가기") {
       window.history.back(); // 뒤로가기
     } else if (restartButton.textContent === "다음 게임") {
+      removeKeyEvent();
       socket.emit("nextGame"); // 다음 게임 시작
       gameOverPopup.style.display = "none";
     }
@@ -87,8 +96,14 @@ export const runPongGame = () => {
   handleSocketEvents(socket, scene);
 
   function removeKeyEvent() {
-    if (keyDownHandler) window.removeEventListener("keydown", keyDownHandler);
-    if (keyUpHandler) window.removeEventListener("keyup", keyUpHandler);
+    if (keyDownHandler) {
+      window.removeEventListener("keydown", keyDownHandler);
+      keyDownHandler = null;
+    }
+    if (keyUpHandler) {
+      window.removeEventListener("keyup", keyUpHandler);
+      keyUpHandler = null;
+    }
   }
 
   function handleSocketEvents(socket, scene) {
@@ -153,7 +168,7 @@ export const runPongGame = () => {
   // 오브젝트(카메라, 점수판, 공과 패들) 초기화 함수 : 게임 시작할 때만 호출
   function resetGameObjects(opponent) {
     resetPositions();
-    updateOppoentnt(scene, paddleId, opponent);
+    updateOpponent(scene, paddleId, opponent);
     updateScore(scene, 0, 0, paddleId);
 
     if (paddleId === "paddle1") {
@@ -180,3 +195,5 @@ export const runPongGame = () => {
     }
   }
 };
+
+// delete from temp_match_user ;delete from temp_match_room_user  ;delete from temp_match ;delete from temp_match_room  ;

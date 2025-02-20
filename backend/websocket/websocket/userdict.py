@@ -28,7 +28,7 @@ class UserDict:
             if user_id not in self.dict:
                 self.logger.error(f"user_id={user_id} is not in dict! not deleting")
                 return False
-            self.logger.info(f"user_id{user_id} successfully deleted from UserDict")
+            self.logger.info(f"user_id={user_id} successfully deleted from UserDict")
             del self.dict[user_id]
             return True
 

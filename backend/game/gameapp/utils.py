@@ -103,7 +103,7 @@ def fetch_username(user_id: int) -> str:
 
 def get_match_user_or_none(user_id: int):
     try:
-        temp_user = TempMatchUser.objects.get(user_id=user_id)
+        temp_user = TempMatchUser.objects.filter(user_id=user_id).all()
     except:
         temp_user = None
     return temp_user
