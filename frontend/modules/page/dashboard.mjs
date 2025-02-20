@@ -7,122 +7,122 @@ import { LOGIN_EXPIRED_MSG } from "../authentication/globalConstants.mjs";
 
 /////////////////////////
 // 예시 데이터: 최근 5경기 점수 정보
-const testJson = {
-	"user_session": {
-		"user_stats": { //유저 섹터, 일반적으로 표현할 데이터
-			"user_name": "choolee", //유저 이름
-			"total_games": 11 //유저의 총 게임 횟수
-		},
-		"user_win_rate": { //유저 섹터, 도넛 그래프, 유저 현재 승률을 표현할 데이터
-			"wins": 4, //유저의 이긴 횟수
-			"losses": 7 //유저의 진 횟수
-		},
-		"win_rate_trend": { //유저 섹터, 라인 그래프, 유저 승률 변화량을 나타낼 데이터,1등 유저 승률 변화량과 비교 (최대 5개)
-			"current_user": [0.6, 0.58, 0.57, 0.55, 0.53], //n-4게임 승률, n-3게임 승률, n-2게임 승률, n-1게임 승률, n게임 승률, 5번의 경기가 안 되었을 경우 0으로 채움
-			"top_user": [0.75, 0.74, 0.73, 0.72, 0.71] // 1등 유저 케이스
-		},
-		"total_game_time": { //유저 섹터, 수평 바 그래프, 총 게임 시간과 해당 유저의 총 게임 시간
-			"user_total_time": 14.8, //해당 유저의 총 게임 시간
-			"avg_total_time": 15.2 //모든 유저의 총 게임 시간의 평균
-		},
-		"recent_user_matches": [ //유저 섹터, 아코디언, 들어갈 데이터 (최대 10개, 최근 것 기준으로)
-			{
-				"user_name": "choolee", //유저 이름
-				"opponent_name": "Bob", //상대방 이름
-				"win": true, //이겼는지 졌는지, 이기면 1, 지면 0
-				"user_score": 11, //유저 스코어
-				"opponent_score": 9, //상대방 스코어
-				"game_time": 240 //해당 게임 시간
-			},
-			{
-				"user_name": "choolee",
-				"opponent_name": "Charlie",
-				"win": false,
-				"user_score": 8,
-				"opponent_score": 11,
-				"game_time": 240
-			},
-			{
-				"user_name": "choolee",
-				"opponent_name": "Charlie",
-				"win": false,
-				"user_score": 8,
-				"opponent_score": 11,
-				"game_time": 240
-			},
-			{
-				"user_name": "choolee",
-				"opponent_name": "Charlie",
-				"win": false,
-				"user_score": 8,
-				"opponent_score": 11,
-				"game_time": 240.3
-			}
-		],
-	},
-	"game_session": {
-		"top_5_winners": [ //게임 섹터, 폴라 그래프, 상위 5명의 승리 횟수
-			{
-				"user_name": "Charlie", //1등 유저의 이름
-				"win_count": 45 //1등 유저의 승리 횟수
-			},
-			{
-				"user_name": "Alice", //2등 유저의 이름
-				"win_count": 30 //2등 유저의 승리 횟수
-			},
-			{
-				"user_name": "Bob",
-				"win_count": 25
-			},
-			{
-				"user_name": "David",
-				"win_count": 20
-			},
-			{
-				"user_name": "Eve",
-				"win_count": 15
-			}
-		],
-		"top_5_game_time": [ //게임 섹터, 바 그래프, 상위 5명의 총 게임 시간
-			{
-				"user_name": "Charlie", //1등 유저
-				"game_time": 16.5 //1등 유저의 총 게임 시간
-			},
-			{
-				"user_name": "Alice",
-				"game_time": 15.0
-			},
-			{
-				"user_name": "Bob",
-				"game_time": 14.3
-			},
-			{
-				"user_name": "David",
-				"game_time": 13.8
-			},
-			{
-				"user_name": "Eve",
-				"game_time": 13.5
-			}
-		],
-		"recent_matches": [ //게임 섹터, 아코디언, 들어갈 데이터 (최대 10개, 최근 것 기준으로)
-			{
-				"winner_name": "David", //이긴 유저 이름
-				"loser_name": "Eve", //진 유저 이름
-				"winner_score": 5, //이긴 유저 스코어
-				"loser_score": 2, //진 유저 스코어
-				"match_playtime": 240 //해당 게임 시간
-			},
-			{
-				"winner_name": "Frank",
-				"loser_name": "Grace",
-				"winner_score": 5,
-				"loser_score": 2,
-				"match_playtime": 240
-			}
-		],
-	}
-};
+// const testJson = {
+// 	"user_session": {
+// 		"user_stats": { //유저 섹터, 일반적으로 표현할 데이터
+// 			"user_name": "choolee", //유저 이름
+// 			"total_games": 11 //유저의 총 게임 횟수
+// 		},
+// 		"user_win_rate": { //유저 섹터, 도넛 그래프, 유저 현재 승률을 표현할 데이터
+// 			"wins": 4, //유저의 이긴 횟수
+// 			"losses": 7 //유저의 진 횟수
+// 		},
+// 		"win_rate_trend": { //유저 섹터, 라인 그래프, 유저 승률 변화량을 나타낼 데이터,1등 유저 승률 변화량과 비교 (최대 5개)
+// 			"current_user": [0.6, 0.58, 0.57, 0.55, 0.53], //n-4게임 승률, n-3게임 승률, n-2게임 승률, n-1게임 승률, n게임 승률, 5번의 경기가 안 되었을 경우 0으로 채움
+// 			"top_user": [0.75, 0.74, 0.73, 0.72, 0.71] // 1등 유저 케이스
+// 		},
+// 		"total_game_time": { //유저 섹터, 수평 바 그래프, 총 게임 시간과 해당 유저의 총 게임 시간
+// 			"user_total_time": 14.8, //해당 유저의 총 게임 시간
+// 			"avg_total_time": 15.2 //모든 유저의 총 게임 시간의 평균
+// 		},
+// 		"recent_user_matches": [ //유저 섹터, 아코디언, 들어갈 데이터 (최대 10개, 최근 것 기준으로)
+// 			{
+// 				"user_name": "choolee", //유저 이름
+// 				"opponent_name": "Bob", //상대방 이름
+// 				"win": true, //이겼는지 졌는지, 이기면 1, 지면 0
+// 				"user_score": 11, //유저 스코어
+// 				"opponent_score": 9, //상대방 스코어
+// 				"game_time": 240 //해당 게임 시간
+// 			},
+// 			{
+// 				"user_name": "choolee",
+// 				"opponent_name": "Charlie",
+// 				"win": false,
+// 				"user_score": 8,
+// 				"opponent_score": 11,
+// 				"game_time": 240
+// 			},
+// 			{
+// 				"user_name": "choolee",
+// 				"opponent_name": "Charlie",
+// 				"win": false,
+// 				"user_score": 8,
+// 				"opponent_score": 11,
+// 				"game_time": 240
+// 			},
+// 			{
+// 				"user_name": "choolee",
+// 				"opponent_name": "Charlie",
+// 				"win": false,
+// 				"user_score": 8,
+// 				"opponent_score": 11,
+// 				"game_time": 240.3
+// 			}
+// 		],
+// 	},
+// 	"game_session": {
+// 		"top_5_winners": [ //게임 섹터, 폴라 그래프, 상위 5명의 승리 횟수
+// 			{
+// 				"user_name": "Charlie", //1등 유저의 이름
+// 				"win_count": 45 //1등 유저의 승리 횟수
+// 			},
+// 			{
+// 				"user_name": "Alice", //2등 유저의 이름
+// 				"win_count": 30 //2등 유저의 승리 횟수
+// 			},
+// 			{
+// 				"user_name": "Bob",
+// 				"win_count": 25
+// 			},
+// 			{
+// 				"user_name": "David",
+// 				"win_count": 20
+// 			},
+// 			{
+// 				"user_name": "Eve",
+// 				"win_count": 15
+// 			}
+// 		],
+// 		"top_5_game_time": [ //게임 섹터, 바 그래프, 상위 5명의 총 게임 시간
+// 			{
+// 				"user_name": "Charlie", //1등 유저
+// 				"game_time": 16.5 //1등 유저의 총 게임 시간
+// 			},
+// 			{
+// 				"user_name": "Alice",
+// 				"game_time": 15.0
+// 			},
+// 			{
+// 				"user_name": "Bob",
+// 				"game_time": 14.3
+// 			},
+// 			{
+// 				"user_name": "David",
+// 				"game_time": 13.8
+// 			},
+// 			{
+// 				"user_name": "Eve",
+// 				"game_time": 13.5
+// 			}
+// 		],
+// 		"recent_matches": [ //게임 섹터, 아코디언, 들어갈 데이터 (최대 10개, 최근 것 기준으로)
+// 			{
+// 				"winner_name": "David", //이긴 유저 이름
+// 				"loser_name": "Eve", //진 유저 이름
+// 				"winner_score": 5, //이긴 유저 스코어
+// 				"loser_score": 2, //진 유저 스코어
+// 				"match_playtime": 240 //해당 게임 시간
+// 			},
+// 			{
+// 				"winner_name": "Frank",
+// 				"loser_name": "Grace",
+// 				"winner_score": 5,
+// 				"loser_score": 2,
+// 				"match_playtime": 240
+// 			}
+// 		],
+// 	}
+// };
 
 ///////////////////////////
 
@@ -139,8 +139,8 @@ export class DashBoardPage {
     else {
       if (response.status === 401 && data.error === WHEN_EXPIRED) {
         try {
-          await JWT.getNewToken();
-          await DashBoardPage.fetchData();
+        	await JWT.getNewToken();
+        	return (await DashBoardPage.fetchData());
         } catch (e) {
           alert(`${LOGIN_EXPIRED_MSG}(${e})`);
           logout();
@@ -252,8 +252,8 @@ export class DashBoardPage {
     PageManager.currentpageStatus = PageManager.pageStatus.dashBoard;
 
     // Fetch and update stats
-    // const testJson = await DashBoardPage.fetchData();
-    // if (testJson === null) return;
+    const testJson = await DashBoardPage.fetchData();
+    if (testJson === null || testJson === undefined) return;
 
     document.getElementById(
       "totalGames"
