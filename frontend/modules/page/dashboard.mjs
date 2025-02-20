@@ -371,7 +371,7 @@ export class DashBoardPage {
     new Chart(document.getElementById("bar-chart-horizontal"), {
       type: "horizontalBar",
       data: {
-        labels: [testJson.user_session.user_stats.user_name, "my average time"],
+        labels: [testJson.user_session.user_stats.user_name, "Average game time"],
         datasets: [
           {
             label: "play time",
