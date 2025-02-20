@@ -265,10 +265,10 @@ class DashboardView(APIView, JWTAuthenticationMixin):
 
     def _calculate_game_time(self) -> float:
         """
-        유저의 전체 평균 게임 시간을 계산 (초 단위)
+        유저들의 전체 게임 시간의 평균을 계산 (초 단위)
         """
         overall_avg_play_time = (
-            MatchHistory.objects.aggregate(avg_time=Avg('play_time'))['avg_time'] or 0.0
+            UserStats.objects.aggregate(avg_time=Avg('total_play_time'))['avg_time'] or 0.0
         )
         return overall_avg_play_time
 
