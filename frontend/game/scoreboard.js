@@ -5,6 +5,7 @@ import { TextGeometry } from "three/addons/geometries/TextGeometry.js";
 let fontCache = null;
 const FONT_SIZE = 5;
 const SCORE_TEXT_NAME = "scoreText";
+const OPPONENT_TEXT_NAME = "opponentText";
 
 const fontLoader = new FontLoader();
 fontLoader.load("/asset/pixelFont.json", (font) => {
