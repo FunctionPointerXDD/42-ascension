@@ -5,6 +5,7 @@ import { TextGeometry } from "three/addons/geometries/TextGeometry.js";
 let fontCache = null;
 const FONT_SIZE = 5;
 const SCORE_TEXT_NAME = "scoreText";
+const OPPONENT_TEXT_NAME = "opponentText";
 
 const fontLoader = new FontLoader();
 fontLoader.load("/asset/pixelFont.json", (font) => {
@@ -53,5 +54,42 @@ export function updateScore(scene, player1Score, player2Score, paddleId) {
     textMesh.rotation.y = Math.PI;
   }
 
+  scene.add(textMesh);
+}
+
+export function updateOpponent(scene, paddleId, opponent) {
+  const oldText = scene.getObjectByName(OPPONENT_TEXT_NAME);
+  if (oldText) {
+    scene.remove(oldText);
+  }
+  if (!fontCache) return;
+
+  const textString = opponent;
+  const textGeometry = new TextGeometry(textString, {
+    font: fontCache,
+    size: 2,
+    height: 0.1,
+  });
+
+  textGeometry.computeBoundingBox();
+  const textCenterOffset =
+    (textGeometry.boundingBox.max.x - textGeometry.boundingBox.min.x) / 2;
+
+  const textEdges = new THREE.EdgesGeometry(textGeometry);
+  const textMaterial = new THREE.LineBasicMaterial({
+    color: paddleId === "paddle1" ? 0x00ff00 : 0x0000ff,
+  });
+  const textMesh = new THREE.LineSegments(textEdges, textMaterial);
+
+  textMesh.name = OPPONENT_TEXT_NAME;
+
+  if (paddleId === "paddle1") {
+    textMesh.position.set(-textCenterOffset, 9, 4);
+    textMesh.rotation.x = Math.PI / 2;
+  } else {
+    textMesh.position.set(textCenterOffset, -9, 4);
+    textMesh.rotation.x = Math.PI / 2;
+    textMesh.rotation.y = Math.PI;
+  }
   scene.add(textMesh);
 }

@@ -103,4 +103,6 @@ export function animate(scene, camera, composer, socket, paddleId) {
 // 애니메이션 중단 함수
 export function stopAnimation() {
   shouldAnimate = false;
+  keyState = {};
+  paddleDirection = 0;
 }
