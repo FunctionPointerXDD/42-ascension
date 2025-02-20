@@ -2,20 +2,42 @@ from typing import TYPE_CHECKING
 import threading
 import logging
 
+from .matchuser import get_aidto, MatchUser, RealUser
+
 
 if TYPE_CHECKING:
     from .match import Match
-    from gameapp.match_objects.matchuser import MatchUser, RealUser
 
 
 class MatchDict:
     logger = logging.getLogger(__name__)
 
-    match_dict_2: dict[int, "Match"]
+    match_dict_2: "dict[int, Match]"
+
+    user_to_connected_matchid: "dict[str, int]"
 
     def __init__(self) -> None:
         self.lock = threading.Lock()
         self.match_dict_2 = {}
+
+        self.lock_user = threading.Lock()
+        self.user_to_connected_matchid = {}
+
+    def __get_connected_matchid(self, sid: str) -> int | None:
+        with self.lock_user:
+            ret = None
+            if sid in self.user_to_connected_matchid:
+                ret = self.user_to_connected_matchid[sid]
+        return ret
+
+    def __set_connected_matchid(self, sid: str, match_id: int):
+        with self.lock_user:
+            self.user_to_connected_matchid[sid] = match_id
+
+    def __del_connected_matchid(self, sid: str):
+        with self.lock_user:
+            if sid in self.user_to_connected_matchid:
+                del self.user_to_connected_matchid[sid]
 
     def __get_match(self, match_id: int) -> "Match":
         with self.lock:
@@ -24,9 +46,11 @@ class MatchDict:
             return self.match_dict_2[match_id]
 
     def delete_match_id(self, match_id: int):
+        self.logger.info(f"delete match id, id={match_id}")
         # self.logger.info("delete match id, get lock")
         with self.lock:
-            del self.match_dict_2[match_id]
+            if match_id in self.match_dict_2:
+                del self.match_dict_2[match_id]
         # self.logger.info("delete_match_id, get lock finished")
 
     def clear(self):
@@ -52,48 +76,35 @@ class MatchDict:
 
     def ai_connected(self, match_id: int, sid: str):
         mat = self.__get_match(match_id)
+        self.__set_connected_matchid(sid, match_id)
         mat.ai_connected(sid)
 
-    def user_connected(self, match_id, user: "RealUser"):
+    def user_connected(self, match_id: int, user: "RealUser"):
         mat = self.__get_match(match_id)
+        self.__set_connected_matchid(user["sid"], match_id)
         mat.user_connected(user)
 
     def user_disconnected(self, match_id: int, dto: "RealUser"):
         mat = self.__get_match(match_id)
+        self.__del_connected_matchid(dto["sid"])
         mat.user_disconnected(dto)
 
-    # def get(self, match_id: int) -> "Match | None":
-    #     self.logger.info("get, get lock")
-    #     with self.lock:
-    #         if match_id in self.match_dict_2:
-    #             ret = self.match_dict_2[match_id]
-    #         else:
-    #             ret = None
-    #     self.logger.info("get, get lock finished")
-    #     return ret
-
-    def get_room_by_user_dto(self, user_dto: "MatchUser"):
-        # self.logger.info("get_room_by_user_dto, get lock")
-
+    def current_status(self):
+        ret = ""
         with self.lock:
-            ret = None
-            for match in self.match_dict_2.values():
-                if match.is_user_dto_connected(user_dto):
-                    ret = match
-                    break
-        # self.logger.info("get_room_by_user_dto, get lock finished")
+            for k, v in self.match_dict_2.items():
+                ret += f"[{k} users={v.users}/is_with_ai={v.is_with_ai}/disconnected={v.disconnected}/opponent={v.opponent}] "
+
         return ret
 
-    # def __getitem__(self, match_id: int) -> "Match":
-    #     self.logger.info("MatchDict GetItem")
-    #     ret = self.get(match_id)
-    #     if ret is None:
-    #         raise KeyError()
-    #     return ret
+    def get_room_by_user_dto(self, user_dto: "MatchUser") -> "Match | None":
+        # self.logger.info("get_room_by_user_dto, get lock")
 
-    # def get_dict(self) -> "dict[int, Match]":
-    #     self.logger.info("MatchDict GetDict")
-    #     return self.match_dict_2
+        connected_matchid = self.__get_connected_matchid(user_dto["sid"])
+        if connected_matchid is None:
+            return None
+
+        return self.__get_match(connected_matchid)
 
 
 match_dict = MatchDict()

@@ -21,18 +21,12 @@ logger = logging.getLogger(__name__)
 def join_match(sid: str, match_user: "TempMatchUser", username: str):
     room_id = match_user.temp_match.id
     is_with_ai = match_user.temp_match.is_with_ai
-    match_dict.set_if_not_exists(
-        room_id, Match(match_user.temp_match, is_with_ai=is_with_ai)
-    )
-    # with match_dict.lock:
-    #     if room_id not in match_dict.get_dict():
-    #         match_dict.get_dict()[room_id] = Match(
-    #             match_user.temp_match, is_with_ai=is_with_ai
-    #         )
+    # match_dict.set_if_not_exists(
+    #     room_id, Match(match_user.temp_match, is_with_ai=is_with_ai)
+    # )
 
     user = RealUser(is_ai=False, id=match_user.user.id, name=username, sid=sid)
     match_dict.user_connected(room_id, user)
-    # match_dict[room_id].user_connected(user)
 
     if is_with_ai:
         resp = post(f"{GAMEAI_URL}/ai/", json={"match_id": room_id})
@@ -49,7 +43,10 @@ def connect_users(users: "list[RealUser]"):
         match_user = get_match_user_or_none(u["id"])
         if match_user is None:
             raise InternalException()
-        join_match(u["sid"], match_user, u["name"])
+        elif len(match_user) > 1:
+            logger.info(f"len(match_user) = {len(match_user)}")
+            raise InternalException()
+        join_match(u["sid"], match_user[0], u["name"])
 
 
 def disconnect_users(room_name: str, users: "list[RealUser]"):

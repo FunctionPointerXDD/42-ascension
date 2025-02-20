@@ -7,7 +7,7 @@ from socketio.exceptions import ConnectionRefusedError
 
 from exceptions.CustomException import InternalException
 from gameapp.connect_utils import join_match
-from gameapp.db_utils import get_room_user_or_none
+from gameapp.db_utils import get_room_user_or_none, get_matchid_user_in
 from gameapp.envs import GAMEAI_URL, JWT_URL
 from gameapp.match_objects import Match, match_dict
 from gameapp.match_objects.matchuser import AI_ID, RealUser, get_dto
@@ -155,13 +155,19 @@ def _get_user_id_from_jwt(jwt) -> int:
 
 def get_current_status() -> str:
     object_all = TempMatchRoomUser.objects.all()
+
     ret = "temp_match_room_user = "
     for user in object_all:
         ret += f"[id={user.user.id}, online={user.is_online}, room_name={user.temp_match_room.room_name}], "
+
     ret += " // temp_match_user = "
     object_all2 = TempMatchUser.objects.all()
     for user in object_all2:
         ret += f"[id={user.user.id}, temp_match={user.temp_match.id}]"
+
+    ret += "\nmatch_dict = {"
+    ret += match_dict.current_status()
+    ret += "}"
     return ret
 
 
@@ -220,7 +226,6 @@ def on_connect(sid, auth):
 
 
 def on_disconnect(sid, reason):
-
     # TODO: If reason is CLIENT_DISCONNECT, wait to be reconnected
 
     is_ai, user_id, user_name = _get_from_sess(sid)
@@ -243,20 +248,17 @@ def on_disconnect(sid, reason):
         if ret:
             return
 
-    match_user = get_match_user_or_none(user_id)
-    if match_user:
-        match_id = match_user.temp_match.id
-        try:
-            match_dict.user_disconnected(match_id, user_dto)
-            logger.info(f"user_id={user_id} user disconnected")
-        except:
-            match_user.delete()
-            match_room_user.delete()
-            logger.info("disconnecting... but match not found")
-            logger.error("Match Room User Not found could not be happening!!!")
-    else:
+    match_id = get_matchid_user_in(user_id)
+    try:
+        match_dict.user_disconnected(match_id, user_dto)
+        logger.info(f"user_id={user_id} user disconnected")
+    except:
+        logger.info("disconnecting... but match not found")
+        logger.error("Match Room User Not found could not be happening!!!")
+    finally:
         match_room_user.delete()
-        logger.info("disconnecting... but match_user not found")
+        TempMatchUser.objects.filter(user_id=user_id).delete()
+        logger.info(f"delete TempMatchUser user_id={user_id}")
 
 
 def join_match_ai(sid: str, match_id: int):
@@ -273,13 +275,17 @@ def on_paddle_move(sid: str, data: dict[str, Any]):
     user_dto = get_dto(is_ai, sid, user_id, user_name)
     room = match_dict.get_room_by_user_dto(user_dto)
     if room is None:
-        logger.debug(f"sid={sid}, user_id={user_id} room not found")
+        logger.error(
+            f"sid={sid}, user_id={user_id}, user_name={user_name} room not found"
+        )
         raise InternalException()
 
     paddle_direction = get_int(data, "paddleDirection")
 
     if room.match_process is not None:
         room.match_process.set_paddle(user_id, paddle_direction)
+    else:
+        logger.error("room.match_process is None!, on_paddle_move failed")
 
 
 def on_next_game(sid: str):

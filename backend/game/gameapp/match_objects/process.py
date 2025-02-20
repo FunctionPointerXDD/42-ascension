@@ -212,22 +212,12 @@ class MatchProcess(threading.Thread):
         score = self.score
         winner_idx = 0 if score[0] == WINNING_SCORE else 1
 
-        sio_emit(
-            GAME_OVER_EVENT,
-            {
-                "winner": "paddle1" if winner_idx == 0 else "paddle2",
-                "paddle1": self.score[0],
-                "paddle2": self.score[1],
-            },
-            self.room_name,
-        )
         set_score(self.users[0]["id"], self.match.id, self.score[0])
         set_score(self.users[1]["id"], self.match.id, self.score[1])
         self.match_manager.alert_winner(winner_idx)
 
     def is_event_set(self):
-        with self.lock:
-            return self.event.is_set()
+        return self.event.is_set()
 
     def get_scores(self):
         with self.lock:

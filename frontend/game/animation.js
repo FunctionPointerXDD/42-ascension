@@ -3,6 +3,7 @@ import * as THREE from "three";
 let shouldAnimate = true; // 애니메이션 실행 여부 플래그
 let keyState = {};
 let paddleDirection = 0;
+let raf;
 
 export function handleKeyDown(event, paddleId) {
   if (event.key === "ArrowLeft")
@@ -63,9 +64,10 @@ export function animate(scene, camera, composer, socket, paddleId) {
   function update() {
     if (!shouldAnimate) {
       scene.remove(stars);
+      cancelAnimationFrame(raf);
       return; // 애니메이션 중단 체크
     }
-    requestAnimationFrame(update);
+    raf = requestAnimationFrame(update);
     const deltaTime = clock.getDelta();
 
     const ball = scene.getObjectByName("ball");

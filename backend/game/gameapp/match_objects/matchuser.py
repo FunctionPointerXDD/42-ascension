@@ -24,6 +24,10 @@ class AiUser(MatchUser):
     pass
 
 
+def get_aidto(sid: str):
+    return AiUser(is_ai=True, sid=sid, id=AI_ID, name=AI_NAME)
+
+
 def get_dto(is_ai: bool, sid: str, user_id: int, user_name: str | None):
     if is_ai:
         return AiUser(is_ai=is_ai, sid=sid, id=AI_ID, name=AI_NAME)
