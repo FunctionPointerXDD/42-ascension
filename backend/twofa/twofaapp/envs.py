@@ -16,5 +16,6 @@ def get_os_int(key: str) -> int:
 
 OTP_SECRET = get_os_str("OTP_SECRET")
 OTP_ISSUER = get_os_str("OTP_ISSUER")
+VALID_WINDOW = get_os_int("VALID_WINDOW")
 
 FRONTEND_URL = get_os_str("FRONTEND_URL")

@@ -33,6 +33,7 @@ logger = logging.getLogger(__name__)
 
 
 def make_rooms(room_name: str, user_id: List[int]):
+    logger.info(f"make_rooms, room_name={room_name}, user_id={user_id}")
     with transaction.atomic():
         temp_match_room = TempMatchRoom.objects.create(room_name=room_name)
 
@@ -88,7 +89,7 @@ def make_rooms(room_name: str, user_id: List[int]):
                 )
             )
 
-        init_matches(room_name, temp_match_users, match_tuples)
+    init_matches(room_name, temp_match_users, match_tuples)
 
 
 def make_airoom(user_id: int):
@@ -110,7 +111,7 @@ def make_airoom(user_id: int):
             user_id=user_id, temp_match_id=temp_match.id
         )
 
-        init_matches(room_name, [temp_match_user], [], is_with_ai=True)
+    init_matches(room_name, [temp_match_user], [], is_with_ai=True)
 
 
 def _get_from_sess(sid: str) -> Tuple[bool, int, str]:
@@ -219,11 +220,16 @@ def on_connect(sid, auth):
 
 
 def on_disconnect(sid, reason):
+
     # TODO: If reason is CLIENT_DISCONNECT, wait to be reconnected
 
     is_ai, user_id, user_name = _get_from_sess(sid)
     if is_ai:
         return
+
+    logger.info(f"disconnecting sid={sid}, user_id={user_id}, user_name={user_name}")
+    current_status = get_current_status()
+    logger.info(f"current status={current_status}")
 
     user_dto = RealUser(is_ai=False, id=user_id, name=user_name, sid=sid)
 
@@ -240,11 +246,10 @@ def on_disconnect(sid, reason):
     match_user = get_match_user_or_none(user_id)
     if match_user:
         match_id = match_user.temp_match.id
-        match = match_dict.get(match_id)
-        if match is not None:
-            match.user_disconnected(user_dto)
+        try:
+            match_dict.user_disconnected(match_id, user_dto)
             logger.info(f"user_id={user_id} user disconnected")
-        else:
+        except:
             match_user.delete()
             match_room_user.delete()
             logger.info("disconnecting... but match not found")
@@ -255,17 +260,15 @@ def on_disconnect(sid, reason):
 
 
 def join_match_ai(sid: str, match_id: int):
-    match_dict[match_id].ai_connected(sid)
+    match_dict.ai_connected(match_id, sid)
+    # match_dict[match_id].ai_connected(sid)
 
 
 def on_paddle_move(sid: str, data: dict[str, Any]):
-    logger.debug(f"paddle_move event received! sid={sid}, data={data}")
-
     with sio_session(sid) as sess:
         is_ai: bool = sess["is_ai"]
         user_id: int = sess["user_id"]
         user_name: str | None = sess["user_name"]
-    logger.debug(f"sid={sid}, user_id={user_id}, user_name={user_name}, is_ai={is_ai}")
 
     user_dto = get_dto(is_ai, sid, user_id, user_name)
     room = match_dict.get_room_by_user_dto(user_dto)
@@ -274,7 +277,6 @@ def on_paddle_move(sid: str, data: dict[str, Any]):
         raise InternalException()
 
     paddle_direction = get_int(data, "paddleDirection")
-    logger.debug(f"sid={sid}, paddle_direction={paddle_direction}")
 
     if room.match_process is not None:
         room.match_process.set_paddle(user_id, paddle_direction)
@@ -304,28 +306,45 @@ def init_matches(
     matches: List[Tuple[TempMatch, TempMatch]],
     is_with_ai: bool = False,
 ):
+    logger.info(f"matches len = {len(matches)}, users len = {len(users)}")
     real_users = []
 
     for m1, m2 in matches:
         match_id1 = m1.id
-        if match_id1 not in match_dict.get_dict():
-            match_dict[match_id1] = Match(m1, is_with_ai=is_with_ai)
+        logger.info(f"match_id1={match_id1}")
+        match_dict.set_if_not_exists(match_id1, Match(m1, is_with_ai=is_with_ai))
+        # with match_dict.lock:
+        #     if match_id1 not in match_dict.get_dict():
+        #         match_dict.get_dict()[match_id1] = Match(m1, is_with_ai=is_with_ai)
 
         match_id2 = m2.id
-        if match_id2 not in match_dict.get_dict():
-            match_dict[match_id2] = Match(m2, is_with_ai=is_with_ai)
+        logger.info(f"match_id2={match_id2}")
+        match_dict.set_if_not_exists(match_id2, Match(m2, is_with_ai=is_with_ai))
+        # with match_dict.lock:
+        #     if match_id2 not in match_dict.get_dict():
+        #         match_dict.get_dict()[match_id2] = Match(m2, is_with_ai=is_with_ai)
 
-        match_dict[match_id1].add_listener(match_dict[match_id2])
-        match_dict[match_id2].add_listener(match_dict[match_id1])
+        logger.info("adding listener")
+        match_dict.add_listener(match_id1, match_id2)
+        # match_dict[match_id1].add_listener(match_dict[match_id2])
+        # match_dict[match_id2].add_listener(match_dict[match_id1])
 
     for u in users:
         match_id = u.temp_match.id
-        if match_id not in match_dict.get_dict():
-            match_dict[match_id] = Match(u.temp_match, is_with_ai=is_with_ai)
-
         user = RealUser(is_ai=False, id=u.user.id, name="", sid="")
         real_users.append(user)
 
-        match_dict[match_id].user_decided(user)
+        logger.info(f"user_decided user={user}")
+        match_dict.set_if_not_exists(
+            match_id, Match(u.temp_match, is_with_ai=is_with_ai)
+        )
+        # with match_dict.lock:
+        #     if match_id not in match_dict.get_dict():
+        #         match_dict.get_dict()[match_id] = Match(
+        #             u.temp_match, is_with_ai=is_with_ai
+        #         )
 
+        match_dict.user_decided(match_id, user)
+
+    logger.info(f"waiting dict added")
     waiting_dict.add(room_name, Waiting(real_users, room_name))

@@ -4,6 +4,7 @@ from typing import TypedDict
 from exceptions.CustomException import InternalException
 
 AI_ID = -1
+AI_NAME = "AI"
 
 logger = logging.getLogger(__name__)
 
@@ -12,10 +13,11 @@ class MatchUser(TypedDict):
     is_ai: bool
     sid: str
     id: int
+    name: str
 
 
 class RealUser(MatchUser):
-    name: str
+    pass
 
 
 class AiUser(MatchUser):
@@ -24,7 +26,7 @@ class AiUser(MatchUser):
 
 def get_dto(is_ai: bool, sid: str, user_id: int, user_name: str | None):
     if is_ai:
-        return AiUser(is_ai=is_ai, sid=sid, id=user_id)
+        return AiUser(is_ai=is_ai, sid=sid, id=AI_ID, name=AI_NAME)
     else:
         if user_name is None:
             logger.error(

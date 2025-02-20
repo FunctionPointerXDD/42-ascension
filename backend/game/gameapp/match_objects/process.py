@@ -12,6 +12,7 @@ from gameapp.sio import (
     UPDATE_BALL_EVENT,
     UPDATE_PADDLE_EVENT,
     UPDATE_SCORE_EVENT,
+    INIT_EVENT,
     sio_emit,
 )
 from gameapp.utils import get_match_name, now
@@ -70,16 +71,18 @@ class MatchProcess(threading.Thread):
             return 1
         return -1
 
+    def emit_ball_update(self):
+        if self.is_with_ai:
+            ai_ball = self.ball
+            ai_ball["AI_pos"] = self.paddle[1]
+            sio_emit(UPDATE_BALL_EVENT, ai_ball, self.room_name)
+        else:
+            sio_emit(UPDATE_BALL_EVENT, self.ball, self.room_name)
+
     def set_paddle(self, user_id: int, paddle_direction: float):
         with self.lock:
-            # self.logger.debug(
-            #     f"user_id={user_id}, room_name={self.room_name}, direction={paddle_direction}"
-            # )
             idx = self.__get_idx(user_id)
 
-        # self.logger.debug(
-        #     f"user_id={user_id}, idx={idx}, paddle_direction={paddle_direction}"
-        # )
         if paddle_direction == 0:
             self.logger.info(f"user_id={user_id}, paddle_direction is zero, returning")
             return
@@ -88,12 +91,8 @@ class MatchProcess(threading.Thread):
             paddle_pos = self.paddle[idx]
 
         normalized_direction = PADDLE_MOVE if paddle_direction > 0 else -PADDLE_MOVE
-        # self.logger.debug(
-        #     f"user_id={user_id} paddle_pos was={paddle_pos} normalized_direction={normalized_direction}"
-        # )
         x = paddle_pos + normalized_direction
         x = max(-GAME_RIGHTEND, min(GAME_RIGHTEND, x))
-        # self.logger.debug(f"user_id={user_id}, prev val={paddle_pos}, become x={x}")
 
         with self.lock:
             self.paddle[idx] = x
@@ -115,14 +114,16 @@ class MatchProcess(threading.Thread):
 
         def start_game_func():
             initial_speed = INITIAL_SPEED
-            self.ball["vx"] = initial_speed * (
-                (int(random.random() * 10000) % 2) * 2 - 1
-            )
+            self.ball["vx"] = initial_speed * ((random.random() - 0.5) * 0.2)
+            if -0.05 < self.ball["vx"] < 0.05:
+                if self.ball["vx"] < 0:
+                    self.ball["vx"] = -0.05
+                else:
+                    self.ball["vx"] = 0.05
             if self.is_with_ai:
-                self.ball["vy"] = initial_speed if scorer_idx == 0 else -initial_speed
-            else:
                 self.ball["vy"] = -initial_speed
-            sio_emit(UPDATE_BALL_EVENT, self.ball, self.room_name)
+            else:
+                self.ball["vy"] = initial_speed if scorer_idx == 0 else -initial_speed
 
         t = threading.Timer(3.0, start_game_func)
         t.start()
@@ -197,7 +198,6 @@ class MatchProcess(threading.Thread):
         self.reset_game(scorer)
 
     def __is_winner(self) -> bool:
-        self.logger.debug(f"[__is_winner] self.is_with_ai={self.is_with_ai}")
         if self.is_with_ai:
             return False
         return self.score[0] == WINNING_SCORE or self.score[1] == WINNING_SCORE
@@ -239,6 +239,24 @@ class MatchProcess(threading.Thread):
                 return
         self.__start_hook()
 
+        sio_emit(
+            INIT_EVENT,
+            {
+                "paddleId": "paddle1",
+                "opponent": self.users[1]["name"],
+            },
+            to=self.users[0]["sid"],
+        )
+
+        sio_emit(
+            INIT_EVENT,
+            {
+                "paddleId": "paddle2",
+                "opponent": self.users[0]["name"],
+            },
+            to=self.users[1]["sid"],
+        )
+
         self.event.wait(3)
 
         while not self.is_event_set():
@@ -257,7 +275,7 @@ class MatchProcess(threading.Thread):
             if self.__is_winner():
                 self.__finish_match()
             else:
-                sio_emit(UPDATE_BALL_EVENT, self.ball, self.room_name)
+                self.emit_ball_update()
 
             self.event.wait(0.016)
 
@@ -265,6 +283,7 @@ class MatchProcess(threading.Thread):
         self.logger.info(f"Process stopped! name={self.room_name}")
         with self.lock:
             self.event.set()
+            self.game_over = True
 
 
 def set_score(user_id: int, match_id: int, score: int):

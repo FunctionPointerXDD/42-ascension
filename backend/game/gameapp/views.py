@@ -66,5 +66,6 @@ def handle_game(req: HttpRequest):
 @authenticated()
 @api_post
 def post_aigame(req: Request, user_id: int, data: dict[str, Any]):
+    logger.info(f"post_aigame start, user_id={user_id}")
     make_airoom(user_id)
     return JsonResponse({})

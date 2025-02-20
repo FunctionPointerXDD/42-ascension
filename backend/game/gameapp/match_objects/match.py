@@ -22,7 +22,7 @@ from gameapp.sio import (
 )
 from gameapp.utils import get_match_name, now
 from .matchdict import match_dict
-from .matchuser import AI_ID, AiUser, MatchUser, RealUser
+from .matchuser import AI_ID, AI_NAME, AiUser, MatchUser, RealUser
 from .process import MatchProcess
 from .timeout import WaitingProcess
 
@@ -48,6 +48,7 @@ class Match:
 
         self.users: list[MatchUser] = []
         self.online: list[bool] = []
+        self.disconnected: list[bool] = []
 
         self.match_process: MatchProcess | None = None
         self.waiting_process = WaitingProcess(self)
@@ -204,12 +205,15 @@ class Match:
 
         sio_emit(GAME_OVER_EVENT, game_over_data, self.room_name)
 
-        resp = post(
-            f"{USER_URL}/_internal/dashboard",
-            json=json_obj,
-        )
-        if not resp.ok:
-            self.logger.error(f"resp is not ok, resp = {resp.text}")
+        try:
+            resp = post(
+                f"{USER_URL}/_internal/dashboard",
+                json=json_obj,
+            )
+            if not resp.ok:
+                self.logger.error(f"resp is not ok, resp = {resp.text}")
+        except:
+            pass
 
         if self.match.winner_match is not None:
             self.logger.info(f"winner match id: {self.match.winner_match.id}")
@@ -224,7 +228,7 @@ class Match:
 
             # Dependency on CASCADE
             self.logger.info(
-                f"Deleting match room name ={self.match.match_room.room_name}"
+                f"Deleting match room name = {self.match.match_room.room_name}"
             )
             TempMatchRoom.objects.filter(
                 room_name=self.match.match_room.room_name
@@ -241,7 +245,6 @@ class Match:
             if "name" in winner:
                 listener.emit_opponent_on_listen(winner["name"])
 
-        match_dict.delete_match_id(self.match.id)
         self.stage = MatchStage.FINISHED
 
     def get_match_name(self):
@@ -278,6 +281,7 @@ class Match:
 
             self.users.append(user)
             self.online.append(False)
+            self.disconnected.append(False)
 
             if len(self.users) == 2 and self.online[0]:
                 self.__set_stage_waiting()
@@ -300,11 +304,6 @@ class Match:
                 )
                 return True
 
-            sio_emit(
-                INIT_EVENT,
-                {"paddleId": "paddle1" if idx == 0 else "paddle2"},
-                to=user["sid"],
-            )
             sio_enter_room(user["sid"], self.room_name)
             self.users[idx] = user
             self.online[idx] = True
@@ -346,11 +345,11 @@ class Match:
                 f"When AI is connected, self.users len is not 1! users={self.users}"
             )
 
-        self.users.append(AiUser(is_ai=True, sid=sid, id=AI_ID))
+        self.users.append(AiUser(is_ai=True, sid=sid, id=AI_ID, name=AI_NAME))
         self.online.append(True)
 
         with self.lock:
-            sio_emit(INIT_EVENT, {"paddleId": "paddle2"}, to=sid)
+            sio_emit(INIT_EVENT, {"paddleId": "paddle2", "opponent": self.users[0]["name"]}, to=sid)
             sio_enter_room(sid, self.room_name)
 
             self.logger.info("waiting process stop")
@@ -389,6 +388,14 @@ class Match:
 
     def user_disconnected(self, user: RealUser):
         with self.lock:
+            idx = self.__get_user_idx(user)
+            if idx == -1:
+                self.logger.info(
+                    f"user is disconnected, but user={user['id']} could not be found in match={self.room_name}"
+                )
+                return
+            self.disconnected[idx] = True
+
             if self.is_with_ai:
                 return self.__disconnect_with_ai(user)
             self.logger.info(f"user={user} is disconnected, current stage={self.stage}")
@@ -400,13 +407,6 @@ class Match:
                 self.logger.error(f"self.stage={self.stage}, but user is disconnected!")
                 return
             elif self.stage == MatchStage.WAITING:
-                idx = self.__get_user_idx(user)
-                if idx == -1:
-                    self.logger.info(
-                        f"user is disconnected, but user={user['id']} could not be found in match={self.room_name}"
-                    )
-                    return
-
                 if self.online[idx]:
                     self.waiting_process.stop()
                     self.stage = MatchStage.FINISHED
@@ -414,11 +414,14 @@ class Match:
             elif self.stage == MatchStage.MATCH:
                 assert self.match_process is not None
 
-                loser_idx = self.__get_user_idx(user)
                 self.match_process.stop()
                 self.stage = MatchStage.FINISHED
-                self.__set_lose(loser_idx)
-                self.__set_win(1 - loser_idx)
+                self.__set_lose(idx)
+                self.__set_win(1 - idx)
+
+            disconnected_cnt = sum([1 if t else 0 for t in self.disconnected])
+        if disconnected_cnt == 2:
+            match_dict.delete_match_id(self.match.id)
 
     def alert_winner(self, winner_idx: int):
         with self.lock:
@@ -437,10 +440,14 @@ class Match:
 
 def match_decided(match_dict: "MatchDict", user: RealUser, match: TempMatch):
     room_id = match.id
-    if room_id not in match_dict.get_dict():
-        match_dict[room_id] = Match(match)
 
-    match_dict[room_id].user_decided(user)
+    match_dict.set_if_not_exists(room_id, Match(match))
+    # with match_dict.lock:
+    #     if room_id not in match_dict.get_dict():
+    #         match_dict.get_dict()[room_id] = Match(match)
+
+    match_dict.user_decided(room_id, user)
+    # match_dict[room_id].user_decided(user)
 
 
 def get_score(user_id: int, match_id: int):
