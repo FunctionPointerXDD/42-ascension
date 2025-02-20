@@ -6,7 +6,7 @@ import {
   handleKeyDown,
   handleKeyUp,
 } from "./animation.js";
-import { updateScore } from "./scoreboard.js";
+import { updateScore, updateOpponent } from "./scoreboard.js";
 import { showGameOver, updateGamePopup, setGameOver } from "./gameOver.js";
 import { JWT } from "../modules/authentication/jwt.mjs";
 import { MainPage } from "../modules/page/main.mjs";
@@ -94,6 +94,7 @@ export const runPongGame = () => {
   function handleSocketEvents(socket, scene) {
     socket.on("init", (data) => {
       paddleId = data.paddleId;
+      const opponent = data.opponent;
       setGameOver(false);
       stopAnimation();
       removeKeyEvent();
@@ -101,7 +102,7 @@ export const runPongGame = () => {
       keyUpHandler = (event) => handleKeyUp(event, paddleId);
       window.addEventListener("keydown", keyDownHandler);
       window.addEventListener("keyup", keyUpHandler);
-      resetGameObjects();
+      resetGameObjects(opponent);
       animate(scene, camera, composer, socket, paddleId);
     });
 
@@ -150,8 +151,9 @@ export const runPongGame = () => {
   }
 
   // 오브젝트(카메라, 점수판, 공과 패들) 초기화 함수 : 게임 시작할 때만 호출
-  function resetGameObjects() {
+  function resetGameObjects(opponent) {
     resetPositions();
+    updateOppoentnt(scene, paddleId, opponent);
     updateScore(scene, 0, 0, paddleId);
 
     if (paddleId === "paddle1") {
