@@ -24,16 +24,16 @@ class MatchDict:
             return self.match_dict_2[match_id]
 
     def delete_match_id(self, match_id: int):
-        self.logger.info("delete match id, get lock")
+        # self.logger.info("delete match id, get lock")
         with self.lock:
             del self.match_dict_2[match_id]
-        self.logger.info("delete_match_id, get lock finished")
+        # self.logger.info("delete_match_id, get lock finished")
 
     def clear(self):
-        self.logger.info("clear, get lock")
+        # self.logger.info("clear, get lock")
         with self.lock:
             self.match_dict_2 = {}
-        self.logger.info("clear, get lock finished")
+        # self.logger.info("clear, get lock finished")
 
     def user_decided(self, match_id: int, user: "RealUser"):
         mat = self.__get_match(match_id)
@@ -73,7 +73,7 @@ class MatchDict:
     #     return ret
 
     def get_room_by_user_dto(self, user_dto: "MatchUser"):
-        self.logger.info("get_room_by_user_dto, get lock")
+        # self.logger.info("get_room_by_user_dto, get lock")
 
         with self.lock:
             ret = None
@@ -81,7 +81,7 @@ class MatchDict:
                 if match.is_user_dto_connected(user_dto):
                     ret = match
                     break
-        self.logger.info("get_room_by_user_dto, get lock finished")
+        # self.logger.info("get_room_by_user_dto, get lock finished")
         return ret
 
     # def __getitem__(self, match_id: int) -> "Match":
