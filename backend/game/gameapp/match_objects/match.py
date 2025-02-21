@@ -78,6 +78,12 @@ class Match:
                 self.room_name,
             )
 
+    def __is_user_disconnected(self, idx: int):
+        return self.disconnected[idx]
+
+    def __is_user_connected(self, idx: int):
+        return not self.__is_user_disconnected(idx) and self.online[idx]
+
     def add_listener(self, sibling: "Match"):
         self.logger.debug(
             f"listener len = {len(self.listeners)}, listener = {[mat.room_name for mat in self.listeners]}"
@@ -125,7 +131,7 @@ class Match:
     def lose_disconnect(self, loser_idx: int):
         sio_disconnect(self.users[loser_idx]["sid"])
 
-    def __set_win(self, winner_idx: int):
+    def __set_win(self, winner_idx: int, disconnect_win: bool = False):
         """
         If the stage is `FINISHED`, but the `winner` is not received event certainly, it is okay to call this method, but only one time.
 
@@ -178,6 +184,7 @@ class Match:
             "winner": "paddle1" if winner_idx == 0 else "paddle2",
             "paddle1": scores[0],
             "paddle2": scores[1],
+            "disconnect_win": disconnect_win,
         }
 
         sio_emit(GAME_OVER_EVENT, game_over_data, self.room_name)
@@ -295,11 +302,15 @@ class Match:
                 return True
 
             if len(self.online) == 2:
-                if not self.online[0] or not self.online[1]:
-                    self.__set_stage_waiting()
-                else:
+                if self.__is_user_disconnected(1 - idx):
+                    self.stage = MatchStage.FINISHED
+                    self.__set_win(idx, True)
+                    return True
+                elif self.__is_user_connected(1 - idx):
                     self.waiting_process.stop()
                     self.__set_stage_match()
+                else:
+                    self.__set_stage_waiting()
         if will_emit:
             match_name = self.get_match_name()
             self.__emit_to_listeners(match_name)
