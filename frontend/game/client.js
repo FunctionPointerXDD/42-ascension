@@ -21,8 +21,7 @@ export const gameSocketDisconnect = () => {
   }
 };
 export const gameSocketConnect = () => {
-  if (socket !== null) {
-    console.log("socket is not null, so disconnect socket before connecting");
+  if (socket !== null) {    
     gameSocketDisconnect();
   }
   
