@@ -133,8 +133,7 @@ export class DashBoardPage {
       JWT.getOptionWithAccessToken("GET")
     ); // Replace with actual API URL
     const data = await response.json();
-
-    // console.log(data);
+	
     if (response.ok) return data;
     else {
       if (response.status === 401 && data.error === WHEN_EXPIRED) {
