@@ -139,13 +139,15 @@ export const runPongGame = () => {
     socket.on("resetPositions", resetPositions);
 
     socket.on("gameOver", (data) => {
+      let win = data.winner === paddleId;
+      if (data.disconnect_win === true) win = true;
       setGameOver(true);
       showGameOver(
-        data.winner === paddleId,
+        win,
         data.paddle1,
         data.paddle2,
-        "unknown vs. unknown", // 기본값
-        false // 기본값
+        "", // 기본값
+        true // 기본값
       );
     });
 

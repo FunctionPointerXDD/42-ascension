@@ -21,9 +21,6 @@ logger = logging.getLogger(__name__)
 def join_match(sid: str, match_user: "TempMatchUser", username: str):
     room_id = match_user.temp_match.id
     is_with_ai = match_user.temp_match.is_with_ai
-    # match_dict.set_if_not_exists(
-    #     room_id, Match(match_user.temp_match, is_with_ai=is_with_ai)
-    # )
 
     user = RealUser(is_ai=False, id=match_user.user.id, name=username, sid=sid)
     match_dict.user_connected(room_id, user)
