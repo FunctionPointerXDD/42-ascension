@@ -21,8 +21,9 @@ export const gameSocketDisconnect = () => {
   }
 };
 export const gameSocketConnect = () => {
-  if (socket !== null)
+  if (socket !== null) {    
     gameSocketDisconnect();
+  }
   
   socket = io("/game", {
     auth: {
@@ -90,6 +91,7 @@ export const runPongGame = () => {
       removeKeyEvent();
       socket.emit("nextGame"); // 다음 게임 시작
       gameOverPopup.style.display = "none";
+      setGameOver(false);
     }
   });
 
@@ -111,7 +113,7 @@ export const runPongGame = () => {
       paddleId = data.paddleId;
       const opponent = data.opponent;
       setGameOver(false);
-      stopAnimation();
+      stopAnimation(scene);
       removeKeyEvent();
       keyDownHandler = (event) => handleKeyDown(event, paddleId);
       keyUpHandler = (event) => handleKeyUp(event, paddleId);
@@ -160,6 +162,7 @@ export const runPongGame = () => {
 
     socket.on("disconnect", (reason) => {
       removeKeyEvent();
+      stopAnimation(scene);
       console.log("서버와의 연결이 종료되었습니다.", reason);
       alert(reason);
     });

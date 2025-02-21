@@ -3,7 +3,7 @@ import * as THREE from "three";
 let shouldAnimate = true; // 애니메이션 실행 여부 플래그
 let keyState = {};
 let paddleDirection = 0;
-let raf;
+let raf = null;
 
 export function handleKeyDown(event, paddleId) {
   if (event.key === "ArrowLeft")
@@ -59,12 +59,12 @@ export function animate(scene, camera, composer, socket, paddleId) {
   });
 
   const stars = new THREE.Points(starGeometry, starMaterial);
+  stars.name = "stars";
   scene.add(stars);
 
   function update() {
     if (!shouldAnimate) {
       scene.remove(stars);
-      cancelAnimationFrame(raf);
       return; // 애니메이션 중단 체크
     }
     raf = requestAnimationFrame(update);
@@ -80,7 +80,6 @@ export function animate(scene, camera, composer, socket, paddleId) {
 
     const paddle = scene.getObjectByName(paddleId);
     if (paddle && paddleDirection !== 0) {
-      console.log(paddleId, paddleDirection);
       socket.emit("paddleMove", { paddleId, paddleDirection });
     }
 
@@ -98,12 +97,14 @@ export function animate(scene, camera, composer, socket, paddleId) {
     stars.geometry.attributes.position.needsUpdate = true;
     composer.render();
   }
-
   update();
 }
 
 // 애니메이션 중단 함수
-export function stopAnimation() {
+export function stopAnimation(scene) {
+  cancelAnimationFrame(raf);
+  const stars = scene.getObjectByName("stars");
+  scene.remove(stars);
   shouldAnimate = false;
   keyState = {};
   paddleDirection = 0;
