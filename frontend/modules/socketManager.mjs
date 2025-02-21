@@ -28,7 +28,6 @@ export class RoomSocketManager {
     });
     RoomSocketManager.socket.on("connect", () => {
       alert("게임 로비에 연결되었습니다.");
-      console.log("게임 로비에 연결되었습니다.");
       RoomSocketManager.socket.emit("name", null, (reply) => {
         RoomSocketManager.myName = reply.name;
       });
@@ -39,9 +38,7 @@ export class RoomSocketManager {
     RoomSocketManager.#onStartGame();
     RoomSocketManager.socket.on("connect_error", async (error) => {
       alert("게임 로비에 연결 중 문제가 발생하였습니다.");
-      console.log("게임 로비에 연결 중 문제가 발생하였습니다.");
       alert("재연결을 시도합니다.");
-      console.log("재연결을 시도합니다.");
       if (error.message === "jwt.expired") {
         try {
           await JWT.getNewToken();
@@ -166,8 +163,7 @@ export class RoomSocketManager {
     RoomSocketManager.maxNumOfParticipant = null;
     RoomSocketManager.isOperator = false;
     RoomSocketManager.myName = null;
-    alert("room socket disconnected")
-    console.log("room socket disconnected")
+    alert("게임 로비에서 퇴장했습니다.");
   };
 
   static getNumOfParticipants = () => {
@@ -179,7 +175,6 @@ export class RoomSocketManager {
   static #alertWhenError = (response) => {
     if ("error" in response) {
       alert(`Error occured.\nCode: ${response.code}\nText: ${response.text}`);
-      console.log(`Error occured.\nCode: ${response.code}\nText: ${response.text}`);
     }
   };
 }

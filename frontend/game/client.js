@@ -34,26 +34,21 @@ export const gameSocketConnect = () => {
 
   socket.on("connect", () => {
     alert("게임에 연결되었습니다.");
-    console.log("게임에 연결되었습니다.")
   });
 
   socket.on("connect_error", async (error) => {
     alert("게임 연결 중 문제가 발생하였습니다.");
-    console.log("게임 연결 중 문제가 발생하였습니다.");
     alert("재연결을 시도합니다.");
-    console.log("재연결을 시도합니다.");
     if (error.message === "jwt.expired") {
       try {
         await JWT.getNewToken();
         gameSocketConnect();
       } catch (e) {
         alert(`${LOGIN_EXPIRED_MSG}(${e})`);
-        console.log(`${LOGIN_EXPIRED_MSG}(${e})`);
         logout();
       }
     } else {
       alert(`재연결에 실패하였습니다. 메인 페이지로 이동합니다(${error})`);
-      console.log(`재연결에 실패하였습니다. 메인 페이지로 이동합니다(${error})`);
       socket = null;
       clearBody();
       MainPage.renderAndPushHistory();
@@ -163,8 +158,7 @@ export const runPongGame = () => {
     socket.on("disconnect", (reason) => {
       removeKeyEvent();
       stopAnimation(scene);
-      console.log("서버와의 연결이 종료되었습니다.", reason);
-      alert(reason);
+      alert(`게임에서 퇴장하였습니다. (reason : ${reason})`);
     });
   }
 
