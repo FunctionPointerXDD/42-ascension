@@ -6,20 +6,25 @@ import {
   handleKeyDown,
   handleKeyUp,
 } from "./animation.js";
-import { updateScore } from "./scoreboard.js";
-import { showGameOver, updateGamePopup } from "./gameOver.js";
+import { updateScore, updateOpponent } from "./scoreboard.js";
+import { showGameOver, updateGamePopup, setGameOver } from "./gameOver.js";
 import { JWT } from "../modules/authentication/jwt.mjs";
+import { MainPage } from "../modules/page/main.mjs";
 import { clearBody } from "../modules/page/lowRankElements.mjs";
 import { LOGIN_EXPIRED_MSG } from "../modules/authentication/globalConstants.mjs";
 
 export let socket = null;
 export const gameSocketDisconnect = () => {
-  if (socket != null) {
+  if (socket !== null) {
     socket.disconnect();
     socket = null;
   }
 };
 export const gameSocketConnect = () => {
+  if (socket !== null) {    
+    gameSocketDisconnect();
+  }
+  
   socket = io("/game", {
     auth: {
       jwt: JWT.getJWTTokenFromCookie().accessToken,
@@ -29,21 +34,26 @@ export const gameSocketConnect = () => {
 
   socket.on("connect", () => {
     alert("게임에 연결되었습니다.");
+    console.log("게임에 연결되었습니다.")
   });
 
   socket.on("connect_error", async (error) => {
     alert("게임 연결 중 문제가 발생하였습니다.");
+    console.log("게임 연결 중 문제가 발생하였습니다.");
     alert("재연결을 시도합니다.");
+    console.log("재연결을 시도합니다.");
     if (error.message === "jwt.expired") {
       try {
         await JWT.getNewToken();
         gameSocketConnect();
       } catch (e) {
         alert(`${LOGIN_EXPIRED_MSG}(${e})`);
+        console.log(`${LOGIN_EXPIRED_MSG}(${e})`);
         logout();
       }
     } else {
       alert(`재연결에 실패하였습니다. 메인 페이지로 이동합니다(${error})`);
+      console.log(`재연결에 실패하였습니다. 메인 페이지로 이동합니다(${error})`);
       socket = null;
       clearBody();
       MainPage.renderAndPushHistory();
@@ -71,30 +81,45 @@ export const runPongGame = () => {
   window.addEventListener("resize", () => {
     onWindowResize(camera, renderer, composer);
   });
+  window.addEventListener("popstate", removeKeyEvent);
 
   // 버튼 클릭 시 게임 재시작
   restartButton.addEventListener("click", () => {
     if (restartButton.textContent === "나가기") {
       window.history.back(); // 뒤로가기
     } else if (restartButton.textContent === "다음 게임") {
+      removeKeyEvent();
       socket.emit("nextGame"); // 다음 게임 시작
       gameOverPopup.style.display = "none";
+      setGameOver(false);
     }
   });
 
   handleSocketEvents(socket, scene);
 
+  function removeKeyEvent() {
+    if (keyDownHandler) {
+      window.removeEventListener("keydown", keyDownHandler);
+      keyDownHandler = null;
+    }
+    if (keyUpHandler) {
+      window.removeEventListener("keyup", keyUpHandler);
+      keyUpHandler = null;
+    }
+  }
+
   function handleSocketEvents(socket, scene) {
     socket.on("init", (data) => {
       paddleId = data.paddleId;
-      stopAnimation();
-      if (keyDownHandler) window.removeEventListener("keydown", keyDownHandler);
-      if (keyUpHandler) window.removeEventListener("keyup", keyUpHandler);
+      const opponent = data.opponent;
+      setGameOver(false);
+      stopAnimation(scene);
+      removeKeyEvent();
       keyDownHandler = (event) => handleKeyDown(event, paddleId);
       keyUpHandler = (event) => handleKeyUp(event, paddleId);
       window.addEventListener("keydown", keyDownHandler);
       window.addEventListener("keyup", keyUpHandler);
-      resetGameObjects();
+      resetGameObjects(opponent);
       animate(scene, camera, composer, socket, paddleId);
     });
 
@@ -119,6 +144,7 @@ export const runPongGame = () => {
     socket.on("resetPositions", resetPositions);
 
     socket.on("gameOver", (data) => {
+      setGameOver(true);
       showGameOver(
         data.winner === paddleId,
         data.paddle1,
@@ -135,14 +161,17 @@ export const runPongGame = () => {
     });
 
     socket.on("disconnect", (reason) => {
+      removeKeyEvent();
+      stopAnimation(scene);
       console.log("서버와의 연결이 종료되었습니다.", reason);
       alert(reason);
     });
   }
 
   // 오브젝트(카메라, 점수판, 공과 패들) 초기화 함수 : 게임 시작할 때만 호출
-  function resetGameObjects() {
+  function resetGameObjects(opponent) {
     resetPositions();
+    updateOpponent(scene, paddleId, opponent);
     updateScore(scene, 0, 0, paddleId);
 
     if (paddleId === "paddle1") {
@@ -169,3 +198,5 @@ export const runPongGame = () => {
     }
   }
 };
+
+// delete from temp_match_user ;delete from temp_match_room_user  ;delete from temp_match ;delete from temp_match_room  ;

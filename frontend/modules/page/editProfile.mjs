@@ -56,7 +56,7 @@ export class EditProfilePage {
     if (response.ok) {
       document.getElementById("currentAvartar").src = json.image_url;
       document.getElementById("currentNick").textContent = json.user_name;
-      document.getElementById("currentMemo").memo = json.memo;
+      document.getElementById("currentMemo").textContent = json.memo;
     } else {
       if (response.status === 401 && json.error === WHEN_EXPIRED) {
         try {
@@ -90,10 +90,13 @@ export class EditProfilePage {
       body: newUserInfo,
     });
 
-    if (!response.ok) {
-      if (response.status === 413)
-      {
-        alert("이미지의 용량이 너무 큽니다. 더 작은 용량의 이미지를 보내주세요");
+    if (response.ok)
+      alert("프로필이 수정되었습니다.");
+    else {
+      if (response.status === 413) {
+        alert(
+          "이미지의 용량이 너무 큽니다. 더 작은 용량의 이미지를 보내주세요"
+        );
         return;
       }
 

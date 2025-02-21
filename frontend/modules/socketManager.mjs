@@ -14,8 +14,12 @@ export class RoomSocketManager {
   static participantList = null;
   static maxNumOfParticipant = null;
   static isOperator = false;
+  static myName = null;
 
   static connect = () => {
+    if (RoomSocketManager.socket !== null)
+      RoomSocketManager.disconnect();
+
     RoomSocketManager.socket = io("/", {
       auth: {
         jwt: JWT.getJWTTokenFromCookie().accessToken,
@@ -24,6 +28,10 @@ export class RoomSocketManager {
     });
     RoomSocketManager.socket.on("connect", () => {
       alert("게임 로비에 연결되었습니다.");
+      console.log("게임 로비에 연결되었습니다.");
+      RoomSocketManager.socket.emit("name", null, (reply) => {
+        RoomSocketManager.myName = reply.name;
+      });
     });
     RoomSocketManager.#onDisconnect();
     RoomSocketManager.#onRoomListEvent();
@@ -31,7 +39,9 @@ export class RoomSocketManager {
     RoomSocketManager.#onStartGame();
     RoomSocketManager.socket.on("connect_error", async (error) => {
       alert("게임 로비에 연결 중 문제가 발생하였습니다.");
+      console.log("게임 로비에 연결 중 문제가 발생하였습니다.");
       alert("재연결을 시도합니다.");
+      console.log("재연결을 시도합니다.");
       if (error.message === "jwt.expired") {
         try {
           await JWT.getNewToken();
@@ -52,7 +62,6 @@ export class RoomSocketManager {
   static disconnect = () => {
     if (RoomSocketManager.socket !== null) {
       RoomSocketManager.socket.disconnect();
-      RoomSocketManager.#whenDisconnect();
     }
   };
 
@@ -79,6 +88,10 @@ export class RoomSocketManager {
   static #onRoomChangedEvent = () => {
     RoomSocketManager.socket.on("room_changed", (list) => {
       RoomSocketManager.participantList = list;
+
+      const adminName = list.people[0].user_name;
+      if (RoomSocketManager.myName === adminName)
+        RoomSocketManager.isOperator = true;
 
       if (
         PageManager.currentpageStatus.page ===
@@ -132,6 +145,8 @@ export class RoomSocketManager {
       null,
       RoomSocketManager.#alertWhenError
     );
+
+    RoomSocketManager.isOperator = false;
     RoomSocketManager.participantList = null;
     RoomSocketManager.maxNumOfParticipant = null;
   };
@@ -149,6 +164,10 @@ export class RoomSocketManager {
     RoomSocketManager.roomList = null;
     RoomSocketManager.participantList = null;
     RoomSocketManager.maxNumOfParticipant = null;
+    RoomSocketManager.isOperator = false;
+    RoomSocketManager.myName = null;
+    alert("room socket disconnected")
+    console.log("room socket disconnected")
   };
 
   static getNumOfParticipants = () => {
@@ -158,7 +177,9 @@ export class RoomSocketManager {
   };
 
   static #alertWhenError = (response) => {
-    if ("error" in response)
+    if ("error" in response) {
       alert(`Error occured.\nCode: ${response.code}\nText: ${response.text}`);
+      console.log(`Error occured.\nCode: ${response.code}\nText: ${response.text}`);
+    }
   };
 }

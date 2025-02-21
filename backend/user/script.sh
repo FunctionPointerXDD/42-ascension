@@ -1,8 +1,5 @@
 #!/bin/bash
 
-python -m pip install --upgrade pip && \
-python -m pip install -r /home/requirements.txt
-
 cd /server
 
 python manage.py makemigrations user

@@ -45,7 +45,11 @@ export class PageManager {
       case PageManager.pageStatus.gameLobby.page:
         if (
           PageManager.currentpageStatus.page ===
-          PageManager.pageStatus.login.page
+            PageManager.pageStatus.login.page ||
+          PageManager.currentpageStatus.page ===
+            PageManager.pageStatus.pong.page ||
+          PageManager.currentpageStatus.page ===
+            PageManager.pageStatus.aiMatch.page
         ) {
           clearBody();
           removeBodyProperty();

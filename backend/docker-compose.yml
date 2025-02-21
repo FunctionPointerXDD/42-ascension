@@ -197,6 +197,7 @@ services:
       - OTP_SECRET=${OTP_SECRET}
       - OTP_ISSUER=${OTP_ISSUER}
       - FRONTEND_URL=${FRONTEND_URL}
+      - VALID_WINDOW=${VALID_WINDOW}
   user:
     init: true
     image: user
@@ -238,8 +239,8 @@ services:
       - postgresql-data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "sh -c 'pg_isready -U ${POSTGRES_USER}'"]
-      interval: 30s
-      timeout: 10s
+      interval: 10s
+      timeout: 5s
       retries: 5
   nginx:
     build: ./nginx

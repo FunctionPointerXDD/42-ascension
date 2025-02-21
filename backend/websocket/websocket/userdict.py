@@ -1,9 +1,10 @@
 import logging
 import threading
-from typing import Dict
+import json
+from typing import Dict, TYPE_CHECKING
 
 from exceptions.CustomException import InternalException
-from websocket.roomuser import RoomUser
+from websocket.room.roomuser import RoomUser
 
 
 class UserDict:
@@ -14,6 +15,9 @@ class UserDict:
         self.dict: Dict[int, RoomUser] = {}
 
     def add(self, user_id: int, roomuser: RoomUser):
+        """
+        Aquire lock
+        """
         with self.lock:
             if user_id in self.dict:
                 self.logger.error(f"user_id={user_id} is in dict! Not Adding")
@@ -23,11 +27,14 @@ class UserDict:
             return True
 
     def remove(self, user_id: int):
+        """
+        Aquire lock
+        """
         with self.lock:
             if user_id not in self.dict:
                 self.logger.error(f"user_id={user_id} is not in dict! not deleting")
                 return False
-            self.logger.info(f"user_id{user_id} successfully deleted from UserDict")
+            self.logger.info(f"user_id={user_id} successfully deleted from UserDict")
             del self.dict[user_id]
             return True
 

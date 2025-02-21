@@ -8,7 +8,8 @@ from rest_framework.request import Request
 from exceptions.CustomException import BadRequestFieldException
 from gameapp.decorators import api_delete, api_post, authenticated
 from gameapp.utils import get_int, get_list, get_str
-from gameapp.wsgi_utils import clear_match_dict, clear_room, make_airoom, make_rooms
+from gameapp.wsgi_utils import clear_match_dict, make_airoom, make_rooms
+from gameapp.db_utils import clear_room
 
 # Create your views here.
 
@@ -27,7 +28,7 @@ class UserNameDto(TypedDict):
 def make_game(req: Request, data: Dict[str, Any]):
     room_name = get_str(data, "room_name")
     users = get_list(data, "users")
-    logger.info(users)
+    logger.info(f"make_game users={users}")
 
     users_list: List[UserNameDto] = []
     for u in users:
@@ -65,5 +66,6 @@ def handle_game(req: HttpRequest):
 @authenticated()
 @api_post
 def post_aigame(req: Request, user_id: int, data: dict[str, Any]):
+    logger.info(f"post_aigame start, user_id={user_id}")
     make_airoom(user_id)
     return JsonResponse({})

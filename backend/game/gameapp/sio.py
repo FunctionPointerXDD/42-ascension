@@ -13,7 +13,6 @@ UPDATE_BALL_EVENT = "updateBall"
 UPDATE_SCORE_EVENT = "updateScore"
 UPDATE_PADDLE_EVENT = "updatePaddle"
 GAME_OVER_EVENT = "gameOver"
-UPDATE_BALL_EVENT = "updateBall"
 RESET_POSITIONS_EVENT = "resetPositions"
 OPPONENT_EVENT = "opponent"
 
@@ -29,8 +28,9 @@ logger = logging.getLogger(__name__)
 
 
 def sio_emit(event: str, data: dict[str, Any], to: str):
-    if event != UPDATE_BALL_EVENT:
+    if event != UPDATE_BALL_EVENT and event != UPDATE_PADDLE_EVENT:
         logger.debug(f"sio_emit: event={event}, data={json.dumps(data)}, to={to}")
+
     sio.emit(event, data, to=to, namespace=NAMESPACE)
 
 
@@ -39,7 +39,7 @@ def sio_session(sid: str):
 
 
 def sio_disconnect(sid: str):
-    logger.info(f"sid={sid} disconnect")
+    logger.info(f"Make sid={sid} disconnect")
     sio.disconnect(sid, namespace=NAMESPACE)
 
 

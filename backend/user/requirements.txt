@@ -1,6 +1,0 @@
-django==5.1.5
-django-filter
-djangorestframework
-requests
-pillow
-psycopg2

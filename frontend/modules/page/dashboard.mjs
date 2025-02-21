@@ -11,11 +11,11 @@ import { LOGIN_EXPIRED_MSG } from "../authentication/globalConstants.mjs";
 // 	"user_session": {
 // 		"user_stats": { //유저 섹터, 일반적으로 표현할 데이터
 // 			"user_name": "choolee", //유저 이름
-// 			"total_games": 50 //유저의 총 게임 횟수
+// 			"total_games": 11 //유저의 총 게임 횟수
 // 		},
 // 		"user_win_rate": { //유저 섹터, 도넛 그래프, 유저 현재 승률을 표현할 데이터
-// 			"wins": 30, //유저의 이긴 횟수
-// 			"losses": 20 //유저의 진 횟수
+// 			"wins": 4, //유저의 이긴 횟수
+// 			"losses": 7 //유저의 진 횟수
 // 		},
 // 		"win_rate_trend": { //유저 섹터, 라인 그래프, 유저 승률 변화량을 나타낼 데이터,1등 유저 승률 변화량과 비교 (최대 5개)
 // 			"current_user": [0.6, 0.58, 0.57, 0.55, 0.53], //n-4게임 승률, n-3게임 승률, n-2게임 승률, n-1게임 승률, n게임 승률, 5번의 경기가 안 되었을 경우 0으로 채움
@@ -139,8 +139,8 @@ export class DashBoardPage {
     else {
       if (response.status === 401 && data.error === WHEN_EXPIRED) {
         try {
-          await JWT.getNewToken();
-          await DashBoardPage.fetchData();
+        	await JWT.getNewToken();
+        	return (await DashBoardPage.fetchData());
         } catch (e) {
           alert(`${LOGIN_EXPIRED_MSG}(${e})`);
           logout();
@@ -253,15 +253,15 @@ export class DashBoardPage {
 
     // Fetch and update stats
     const testJson = await DashBoardPage.fetchData();
-    if (testJson === null) return;
+    if (testJson === null || testJson === undefined) return;
 
     document.getElementById(
       "totalGames"
     ).textContent = `Total Games Played: ${testJson.user_session.user_stats.total_games}`;
     document.getElementById("winLossRatio").textContent = `Win/Loss Ratio: ${
-      (testJson.user_session.user_win_rate.wins /
+      ((testJson.user_session.user_win_rate.wins /
         testJson.user_session.user_stats.total_games) *
-      100
+      100).toFixed(1)
     }%`;
 
     // recent_user_matches 배열을 아코디언 데이터로 변환
@@ -371,7 +371,7 @@ export class DashBoardPage {
     new Chart(document.getElementById("bar-chart-horizontal"), {
       type: "horizontalBar",
       data: {
-        labels: [testJson.user_session.user_stats.user_name, "top ranker"],
+        labels: [testJson.user_session.user_stats.user_name, "Average game time"],
         datasets: [
           {
             label: "play time",

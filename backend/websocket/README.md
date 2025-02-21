@@ -55,9 +55,6 @@
 - 방이 다 차지 않은 경우, `WebSocketRoomNotFullException()`
 - 방에서 관리자가 아닌 경우, `WebSocketRoomNotAdminException()`
 
-## event.on: debug
-
-현재 참가해있는 방을 보여줍니다. 디버그용이고, 쓰이지 않습니다.
 
 ## event.emit: room_list
 
