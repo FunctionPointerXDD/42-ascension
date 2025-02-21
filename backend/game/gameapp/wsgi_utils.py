@@ -153,29 +153,8 @@ def _get_user_id_from_jwt(jwt) -> int:
     return json["user_id"]
 
 
-def get_current_status() -> str:
-    object_all = TempMatchRoomUser.objects.all()
-
-    ret = "temp_match_room_user = "
-    for user in object_all:
-        ret += f"[id={user.user.id}, online={user.is_online}, room_name={user.temp_match_room.room_name}], "
-
-    ret += " // temp_match_user = "
-    object_all2 = TempMatchUser.objects.all()
-    for user in object_all2:
-        ret += f"[id={user.user.id}, temp_match={user.temp_match.id}]"
-
-    ret += "\nmatch_dict = {"
-    ret += match_dict.current_status()
-    ret += "}"
-    return ret
-
-
 def on_connect(sid, auth):
     logger.info(f"connected sid={sid}")
-
-    current_status = get_current_status()
-    logger.info(f"current status={current_status}")
 
     if "ai" in auth:
         jwt = get_str(auth, "jwt")
@@ -233,22 +212,22 @@ def on_disconnect(sid, reason):
         return
 
     logger.info(f"disconnecting sid={sid}, user_id={user_id}, user_name={user_name}")
-    current_status = get_current_status()
-    logger.info(f"current status={current_status}")
 
     user_dto = RealUser(is_ai=False, id=user_id, name=user_name, sid=sid)
 
     match_room_user = get_match_room_user_or_none(user_id)
     if match_room_user is None:
+        logger.info("match room user got None, returning")
         return
     room_name = match_room_user.temp_match_room.room_name
     waiting_room = waiting_dict.get(room_name)
-    if waiting_room:
+    if waiting_room is not None:
         ret = waiting_room.user_disconnect(user_dto)
         if ret:
             return
 
     match_id = get_matchid_user_in(user_id)
+    logger.info(f"user_id={user_id}, match_id={match_id}")
     try:
         match_dict.user_disconnected(match_id, user_dto)
         logger.info(f"user_id={user_id} user disconnected")

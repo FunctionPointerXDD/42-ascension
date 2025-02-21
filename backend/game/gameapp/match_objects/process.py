@@ -53,7 +53,7 @@ class MatchProcess(threading.Thread):
             self.logger.error(f"users len is not 2, users={users}")
             raise InternalException()
 
-        self.ball = {"x": 0.0, "y": 0.0, "vx": 0.1, "vy": 0.1}
+        self.ball = {"x": 0.0, "y": 0.0, "vx": INITIAL_SPEED, "vy": INITIAL_SPEED}
         self.score = [0, 0]
         self.match = match
 

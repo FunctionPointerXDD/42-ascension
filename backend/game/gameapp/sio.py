@@ -39,7 +39,7 @@ def sio_session(sid: str):
 
 
 def sio_disconnect(sid: str):
-    logger.info(f"sid={sid} disconnect")
+    logger.info(f"Make sid={sid} disconnect")
     sio.disconnect(sid, namespace=NAMESPACE)
 
 
