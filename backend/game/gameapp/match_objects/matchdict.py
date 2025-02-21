@@ -60,13 +60,20 @@ class MatchDict:
         # self.logger.info("clear, get lock finished")
 
     def user_decided(self, match_id: int, user: "RealUser"):
+        self.logger.info("user_decided, got lock")
         mat = self.__get_match(match_id)
+        self.logger.info("user_decided, released lock")
         mat.user_decided(user)
 
     def set_if_not_exists(self, match_id: int, value: "Match"):
+        """
+        Aquire lock
+        """
+        self.logger.info("set_if_not_exists got lock")
         with self.lock:
             if match_id not in self.match_dict_2:
                 self.match_dict_2[match_id] = value
+        self.logger.info("set_if_not_exists released lock")
 
     def add_listener(self, match_id1: int, match_id2: int):
         mat1 = self.__get_match(match_id1)
@@ -86,16 +93,10 @@ class MatchDict:
 
     def user_disconnected(self, match_id: int, dto: "RealUser"):
         mat = self.__get_match(match_id)
+        self.logger.info("match got")
         self.__del_connected_matchid(dto["sid"])
+        self.logger.info("del connected matchid done")
         mat.user_disconnected(dto)
-
-    def current_status(self):
-        ret = ""
-        with self.lock:
-            for k, v in self.match_dict_2.items():
-                ret += f"[{k} users={v.users}/is_with_ai={v.is_with_ai}/disconnected={v.disconnected}/opponent={v.opponent}] "
-
-        return ret
 
     def get_room_by_user_dto(self, user_dto: "MatchUser") -> "Match | None":
         # self.logger.info("get_room_by_user_dto, get lock")

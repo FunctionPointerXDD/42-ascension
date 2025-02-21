@@ -113,7 +113,6 @@ def _connect(sid: str, environ, auth: dict[str, Any]):
 
 @event_on("connect")
 def connect(sid: str, environ, auth: dict[str, Any]):
-    logger.info(user_dict.debug())
     try:
         return _connect(sid, environ, auth)
     except CustomException as e:

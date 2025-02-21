@@ -120,6 +120,9 @@ class Match:
             f"set win and lose: winner_idx={winner_idx}, loser_idx={loser_idx}"
         )
         self.__set_win(winner_idx)
+        # sio_disconnect(self.users[loser_idx]["sid"])
+
+    def lose_disconnect(self, loser_idx: int):
         sio_disconnect(self.users[loser_idx]["sid"])
 
     def __set_win(self, winner_idx: int):
@@ -186,6 +189,8 @@ class Match:
             )
             if not resp.ok:
                 self.logger.error(f"resp is not ok, resp = {resp.text}")
+            else:
+                self.logger.info("resp is ok!, returned from dashboard")
         except:
             pass
 
@@ -211,7 +216,8 @@ class Match:
             user_id=winner["id"],
             temp_match_id=self.match.winner_match.id,
         )
-        match_decided(match_dict, winner, self.match.winner_match)  # type: ignore
+
+        match_decided(match_dict, winner, self.match.winner_match)
 
         self.__emit_opponent()
 
@@ -219,6 +225,7 @@ class Match:
             listener.__emit_opponent_on_listen(winner["name"])
 
         self.stage = MatchStage.FINISHED
+        self.logger.info("set stage to FINISHED")
 
     def get_match_name(self):
         with self.lock:
@@ -298,16 +305,9 @@ class Match:
             self.__emit_to_listeners(match_name)
         return True
 
-    def is_user_connected(self, user_id: int) -> bool:
-        with self.lock:
-            for idx, user in enumerate(self.users):
-                if user["id"] == user_id and self.online[idx]:
-                    return True
-        return False
-
     def is_user_dto_connected(self, user_dto: "MatchUser") -> bool:
         with self.lock:
-            for idx, user in enumerate(self.users):
+            for user in self.users:
                 if user["id"] == user_dto["id"] and user["sid"] == user_dto["sid"]:
                     return True
         return False
@@ -337,6 +337,9 @@ class Match:
             self.__set_stage_match()
 
     def timed_out(self):
+        """
+        Aquire lock
+        """
         self.logger.info("Match - timed out")
         with self.lock:
             if self.stage != MatchStage.WAITING:
@@ -351,6 +354,7 @@ class Match:
             self.stage = MatchStage.FINISHED
             winner_idx = 0 if self.online[0] else 1
             self.__set_win_and_lose(winner_idx)
+        self.lose_disconnect(1 - winner_idx)
 
     def __disconnect_with_ai(self, user: RealUser):
         self.logger.info(f"user={user} is disconnected, but match is with ai")
@@ -363,6 +367,10 @@ class Match:
             sio_disconnect(ai_sid)
 
     def user_disconnected(self, user: RealUser):
+        """
+        Aquire lock
+        """
+        self.logger.info("user disconnected start")
         with self.lock:
             idx = self.__get_user_idx(user)
             if idx == -1:
@@ -404,6 +412,9 @@ class Match:
             match_dict.delete_match_id(self.match.id)
 
     def alert_winner(self, winner_idx: int):
+        """
+        Aquire lock
+        """
         with self.lock:
             if self.stage == MatchStage.FINISHED:
                 self.logger.info(
@@ -416,6 +427,9 @@ class Match:
             )
             self.stage = MatchStage.FINISHED
             self.__set_win_and_lose(winner_idx)
+        self.logger.info("alert winner, released lock and make lose disconnect")
+        self.lose_disconnect(1 - winner_idx)
+        self.logger.info("alert winner released the lock")
 
 
 def match_decided(match_dict: "MatchDict", user: RealUser, match: TempMatch):
@@ -428,8 +442,3 @@ def match_decided(match_dict: "MatchDict", user: RealUser, match: TempMatch):
 
     match_dict.user_decided(room_id, user)
     # match_dict[room_id].user_decided(user)
-
-
-def get_score(user_id: int, match_id: int):
-    temp_match_user = TempMatchUser.objects.get(user_id=user_id, temp_match_id=match_id)
-    return temp_match_user.score

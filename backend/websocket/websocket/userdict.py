@@ -6,9 +6,6 @@ from typing import Dict, TYPE_CHECKING
 from exceptions.CustomException import InternalException
 from websocket.room.roomuser import RoomUser
 
-if TYPE_CHECKING:
-    from websocket.room.room_manager import RoomManager
-
 
 class UserDict:
     logger = logging.getLogger(__name__)
@@ -18,6 +15,9 @@ class UserDict:
         self.dict: Dict[int, RoomUser] = {}
 
     def add(self, user_id: int, roomuser: RoomUser):
+        """
+        Aquire lock
+        """
         with self.lock:
             if user_id in self.dict:
                 self.logger.error(f"user_id={user_id} is in dict! Not Adding")
@@ -27,6 +27,9 @@ class UserDict:
             return True
 
     def remove(self, user_id: int):
+        """
+        Aquire lock
+        """
         with self.lock:
             if user_id not in self.dict:
                 self.logger.error(f"user_id={user_id} is not in dict! not deleting")
@@ -42,10 +45,3 @@ class UserDict:
                 raise InternalException()
             self.logger.info(f"Trying to find user_id={user_id} succeeded")
             return self.dict[user_id]
-
-    def debug(self) -> str:
-        ret = ""
-        with self.lock:
-            for k, v in self.dict.items():
-                ret += f"[{k}, {json.dumps(v.to_json())}] "
-        return ret

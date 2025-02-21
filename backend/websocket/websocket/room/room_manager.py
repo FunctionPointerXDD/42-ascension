@@ -26,23 +26,33 @@ class RoomManager:
         self.lock = threading.Lock()
 
     def room_list_to_json(self):
+        """
+        Aquire lock
+        """
         with self.lock:
-            room_dict = copy.deepcopy(self.room_dict)
-
-        room_json_list = [room.to_json() for room in room_dict.values()]
-        return {"room": room_json_list}
+            room_json_list = [room.to_json() for room in self.room_dict.values()]
+            return {"room": room_json_list}
 
     def add_room(self, room: Room):
+        """
+        Aquire lock
+        """
         with self.lock:
             if room.room_id in self.room_dict:
                 raise InternalException()
             self.room_dict[room.room_id] = room
 
     def remove_room(self, room: Room):
+        """
+        Aquire lock
+        """
         with self.lock:
             del self.room_dict[room.room_id]
 
     def _get_room(self, room_id: str) -> Room | None:
+        """
+        Aquire lock
+        """
         with self.lock:
             if room_id in self.room_dict:
                 return self.room_dict[room_id]

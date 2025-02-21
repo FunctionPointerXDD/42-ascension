@@ -28,10 +28,10 @@ class Room:
     user_list: List[int]
 
     def __init__(self, room_name: str, room_limit: int, admin: int) -> None:
-        self.room_id = generate_random(21)
-        self.room_name = room_name
-        self.room_limit = room_limit
-        self.user_list = [admin]
+        self.room_id: str = generate_random(21)
+        self.room_name: str = room_name
+        self.room_limit: int = room_limit
+        self.user_list: List[int] = [admin]
         self.lock = threading.Lock()
 
     def to_json(self) -> RoomJson:
@@ -55,6 +55,9 @@ class Room:
             self.user_list.append(user_id)
 
     def remove_user(self, user_id: int) -> None:
+        """
+        Aquire lock
+        """
         with self.lock:
             if not self.__is_valid():
                 raise WebSocketRoomNotFoundException()
@@ -72,7 +75,7 @@ class Room:
 
     def people_list_to_json(self, user_dict: "UserDict") -> List[RoomUserJson]:
         """
-        Requires `user_dict`'s lock
+        Aquire lock, Release the lock, and then Requires `user_dict`'s lock
         """
         with self.lock:
             user_list = self.user_list[:]
@@ -83,6 +86,9 @@ class Room:
         return ret
 
     def is_full(self) -> bool:
+        """
+        Aquire lock
+        """
         with self.lock:
             if not self.__is_valid():
                 return False
