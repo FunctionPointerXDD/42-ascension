@@ -1,10 +1,13 @@
 import logging
 import threading
 import json
-from typing import Dict
+from typing import Dict, TYPE_CHECKING
 
 from exceptions.CustomException import InternalException
-from websocket.roomuser import RoomUser
+from websocket.room.roomuser import RoomUser
+
+if TYPE_CHECKING:
+    from websocket.room.room_manager import RoomManager
 
 
 class UserDict:

@@ -22,23 +22,23 @@ from exceptions.CustomException import (
     UnauthenticatedException,
     WebSocketAlreadyRoomJoinedException,
     WebSocketRoomNotAdminException,
-    WebSocketRoomNotFoundException,
     WebSocketRoomNotFullException,
     WebSocketRoomNotJoinedException,
 )
 from websocket.decorators import event_on
 from websocket.envs import JWT_URL, GAME_URL
 from websocket.requests import post
-from websocket.room import Room
-from websocket.roomuser import RoomUser, RoomUserJson
+from websocket.room.room import Room
+from websocket.room.roomuser import RoomUser, RoomUserJson
+from websocket.room.room_manager import ROOM_MANAGER
 from websocket.sio import (
-    ROOM_CHANGED_EVENT,
     ROOM_LIMIT_VALID_VALUES,
-    ROOM_LIST_EVENT,
-    ROOM_LISTENERS,
     START_GAME_EVENT,
     sio,
     sio_emit,
+    sio_enter_room_by_id,
+    sio_enter_room_by_init,
+    sio_leave_room_by_room,
 )
 from websocket.userdict import UserDict
 from websocket.utils import (
@@ -66,60 +66,6 @@ class TokenDto(TypedDict):
 class PeopleListJson(TypedDict):
     people: List[RoomUserJson]
 
-
-class RoomManager:
-    room_list: List[Room]
-
-    def __init__(self) -> None:
-        self.room_list = []
-
-    def room_list_to_json(self):
-        room_json_list = [room.to_json() for room in self.room_list]
-        return {"room": room_json_list}
-
-    def add_room(self, room: Room):
-        if room.room_id in [r.room_id for r in self.room_list]:
-            raise InternalException()
-        self.room_list.append(room)
-
-    def remove_room(self, room: Room):
-        self.room_list.remove(room)
-
-    def _get_room(self, room_id: str) -> Room | None:
-        for r in self.room_list:
-            if r.room_id == room_id:
-                return r
-        return None
-
-    def add_user(self, room_id: str, user_id: int):
-        room = self._get_room(room_id)
-        if room is None:
-            raise WebSocketRoomNotFoundException()
-        if not room.is_valid():
-            self.remove_room(room)
-            raise WebSocketRoomNotFoundException()
-        room.add_user(user_id)
-
-    def remove_user(self, room_id: str, user_id: int):
-        room = self._get_room(room_id)
-        if room is None:
-            raise WebSocketRoomNotFoundException()
-        if not room.is_valid():
-            self.remove_room(room)
-            raise WebSocketRoomNotFoundException()
-
-        room.remove_user(user_id)
-        if not room.is_valid():
-            self.remove_room(room)
-
-    def people_list_to_json(self, room_id: str) -> PeopleListJson:
-        room = self._get_room(room_id)
-        if room is None:
-            return {"people": []}
-        return {"people": room.people_list_to_json(user_dict)}
-
-
-ROOM_MANAGER = RoomManager()
 
 user_dict = UserDict()
 
@@ -161,9 +107,8 @@ def _connect(sid: str, environ, auth: dict[str, Any]):
         logger.info(f"userid={user_id} is in dict -> user.found")
         raise ConnectionRefusedError("user.found")
 
-    logger.info(f"sid={sid} is entered to {ROOM_LISTENERS}")
-    sio.enter_room(sid, ROOM_LISTENERS)
-    sio_emit(ROOM_LIST_EVENT, ROOM_MANAGER.room_list_to_json(), to=sid)
+    sio_enter_room_by_init(sid)
+    ROOM_MANAGER.emit_to_listeners(to=sid)
 
 
 @event_on("connect")
@@ -183,21 +128,21 @@ def connect(sid: str, environ, auth: dict[str, Any]):
 
 @event_on("disconnect")
 def disconnect(sid: str, reason):
-    logger.info(f"sid={sid} Disconnecting")
-
     user_id = get_session_info(sid)
+    logger.info(f"sid={sid}, user_id={user_id} Disconnecting")
+
+    joined_room = get_joined_room(sid)
+    try:
+        if joined_room is not None:
+            ROOM_MANAGER.remove_user(joined_room, user_id)
+    except:
+        pass
+
     user_dict.remove(user_id)
 
-    room_changed = False
-    for r in sio.rooms(sid):
-        if r == sid or r == ROOM_LISTENERS:
-            continue
-        ROOM_MANAGER.remove_user(r, user_id)
-        room_changed = True
-        sio_emit(ROOM_CHANGED_EVENT, ROOM_MANAGER.people_list_to_json(r), to=r)  # type: ignore
-
-    if room_changed:
-        sio_emit(ROOM_LIST_EVENT, ROOM_MANAGER.room_list_to_json(), to=ROOM_LISTENERS)
+    if joined_room is None:
+        return
+    ROOM_MANAGER.emit_room_changed(joined_room, user_dict)
 
 
 @event_on("name")
@@ -226,20 +171,13 @@ def sio_make_room(sid: str, data: dict[str, Any]):
     )
     room = Room(room_name=room_name, room_limit=room_limit, admin=user_id)
     ROOM_MANAGER.add_room(room)
+    sio_enter_room_by_id(sid, room.room_id)
 
-    sio.leave_room(sid, room=ROOM_LISTENERS)
-    sio_emit(ROOM_LIST_EVENT, ROOM_MANAGER.room_list_to_json(), to=ROOM_LISTENERS)
-
-    sio.enter_room(sid, room=room.room_id)
-    sio_emit(
-        ROOM_CHANGED_EVENT,
-        ROOM_MANAGER.people_list_to_json(room.room_id),  # type: ignore
-        to=room.room_id,
-    )
+    ROOM_MANAGER.emit_room_changed(room.room_id, user_dict)
 
 
 @event_on("enter_room")
-def sio_enter_room(sid: str, data: dict[str, Any]):
+def on_enter_room(sid: str, data: dict[str, Any]):
     user_id = get_session_info(sid)
 
     room_id = get_str(data, "room_id")
@@ -249,11 +187,8 @@ def sio_enter_room(sid: str, data: dict[str, Any]):
 
     ROOM_MANAGER.add_user(room_id, user_id)
 
-    sio.leave_room(sid, ROOM_LISTENERS)
-    sio_emit(ROOM_LIST_EVENT, ROOM_MANAGER.room_list_to_json(), to=ROOM_LISTENERS)
-
-    sio.enter_room(sid, room_id)
-    sio_emit(ROOM_CHANGED_EVENT, ROOM_MANAGER.people_list_to_json(room_id), to=room_id)  # type: ignore
+    sio_enter_room_by_id(sid, room_id)
+    ROOM_MANAGER.emit_room_changed(room_id, user_dict)
 
 
 @event_on("leave_room")
@@ -266,11 +201,9 @@ def sio_leave_room(sid: str, data: dict[str, Any]):
         raise WebSocketRoomNotJoinedException()
 
     ROOM_MANAGER.remove_user(room_id, user_id)
-    sio.leave_room(sid, room_id)
-    sio_emit(ROOM_CHANGED_EVENT, ROOM_MANAGER.people_list_to_json(room_id), to=room_id)  # type: ignore
 
-    sio.enter_room(sid, ROOM_LISTENERS)
-    sio_emit(ROOM_LIST_EVENT, ROOM_MANAGER.room_list_to_json(), to=ROOM_LISTENERS)
+    sio_leave_room_by_room(sid, room_id)
+    ROOM_MANAGER.emit_room_changed(room_id, user_dict)
 
 
 @event_on("start_game")
@@ -327,8 +260,3 @@ def sio_start_game(sid: str, data: dict[str, Any]):
             },
             to=sid,
         )
-
-
-@event_on("debug")
-def sio_debug(sid: str, data: dict[str, Any]):
-    return {"rooms": sio.rooms(sid)}
