@@ -378,9 +378,6 @@ class Match:
             sio_disconnect(ai_sid)
 
     def user_disconnected(self, user: RealUser):
-        """
-        Aquire lock
-        """
         self.logger.info("user disconnected start")
         with self.lock:
             idx = self.__get_user_idx(user)
@@ -418,8 +415,10 @@ class Match:
 
             disconnected_cnt = sum([1 if t else 0 for t in self.disconnected])
 
-        self.logger.info(f"disconnected_cnt = {disconnected_cnt}")
-        if disconnected_cnt == 2:
+        self.logger.info(
+            f"disconnected_cnt = {disconnected_cnt}, is_with_ai = {self.is_with_ai}"
+        )
+        if disconnected_cnt == 2 or self.is_with_ai:
             match_dict.delete_match_id(self.match.id)
 
     def alert_winner(self, winner_idx: int):
@@ -438,6 +437,7 @@ class Match:
             )
             self.stage = MatchStage.FINISHED
             self.__set_win_and_lose(winner_idx)
+
         self.logger.info("alert winner, released lock and make lose disconnect")
         self.lose_disconnect(1 - winner_idx)
         self.logger.info("alert winner released the lock")
@@ -447,9 +447,4 @@ def match_decided(match_dict: "MatchDict", user: RealUser, match: TempMatch):
     room_id = match.id
 
     match_dict.set_if_not_exists(room_id, Match(match))
-    # with match_dict.lock:
-    #     if room_id not in match_dict.get_dict():
-    #         match_dict.get_dict()[room_id] = Match(match)
-
     match_dict.user_decided(room_id, user)
-    # match_dict[room_id].user_decided(user)

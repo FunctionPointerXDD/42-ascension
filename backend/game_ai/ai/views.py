@@ -15,8 +15,6 @@ from ai.requests import post
 from ai.utils import get_int
 from game_ai.envs import GAME_URL, JWT_URL
 
-# Create your views here.
-
 
 NAMESPACE = "/game"
 
@@ -75,7 +73,6 @@ class AiClient:
 
         @self.sio_event("updateBall")
         def updateBall(ball_data):
-            # logger.info(f"ai got updateBall, data={json.dumps(ball_data)}")
             if not self.sio.connected or self.paddle_id is None:
                 return
 

@@ -2,9 +2,6 @@ from django.db import models
 from django.utils.timezone import now
 
 
-# Create your models here.
-
-
 class User(models.Model):
     id = models.BigAutoField(primary_key=True)
 
@@ -28,8 +25,6 @@ class TempMatchRoomUser(models.Model):
     temp_match_room = models.ForeignKey(to=TempMatchRoom, on_delete=models.CASCADE)
 
     is_online = models.BooleanField(default=False)
-
-    # sid = models.CharField(max_length=32)
 
     class Meta:
         db_table = "temp_match_room_user"

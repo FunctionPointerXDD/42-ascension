@@ -20,12 +20,10 @@ from django.contrib import admin
 from django.urls import include, path
 
 import gameapp.urls
-import testapp.urls
 from game import settings
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("_internal/", include(gameapp.urls.urlpatterns)),
     path("game/", include(gameapp.urls.public_patterns)),
-    path("test/", include(testapp.urls.urlpatterns)),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

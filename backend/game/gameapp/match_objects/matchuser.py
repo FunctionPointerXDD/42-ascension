@@ -28,13 +28,17 @@ def get_aidto(sid: str):
     return AiUser(is_ai=True, sid=sid, id=AI_ID, name=AI_NAME)
 
 
+def get_realdto(sid: str, user_id: int, user_name: str):
+    return RealUser(is_ai=False, sid=sid, id=user_id, name=user_name)
+
+
 def get_dto(is_ai: bool, sid: str, user_id: int, user_name: str | None):
     if is_ai:
-        return AiUser(is_ai=is_ai, sid=sid, id=AI_ID, name=AI_NAME)
+        return get_aidto(sid)
     else:
         if user_name is None:
             logger.error(
-                "When `is_ai` is False, expected `user_name` to be not None, but got None!"
+                "When `is_ai` is False, expected `user_name` not to be None, but got None!"
             )
             raise InternalException()
-        return RealUser(is_ai=is_ai, sid=sid, id=user_id, name=user_name)
+        return get_realdto(sid, user_id, user_name)

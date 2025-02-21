@@ -11,8 +11,6 @@ from gameapp.utils import get_int, get_list, get_str
 from gameapp.wsgi_utils import clear_match_dict, make_airoom, make_rooms
 from gameapp.db_utils import clear_room
 
-# Create your views here.
-
 
 logger = logging.getLogger(__name__)
 
@@ -22,8 +20,6 @@ class UserNameDto(TypedDict):
     user_name: str
 
 
-# Will make rooms for received info
-# Will not allow when multiple user is in the game -> user.already_join_game
 @api_post
 def make_game(req: Request, data: Dict[str, Any]):
     room_name = get_str(data, "room_name")

@@ -134,14 +134,14 @@ def disconnect(sid: str, reason):
     try:
         if joined_room is not None:
             ROOM_MANAGER.remove_user(joined_room, user_id)
-    except:
-        pass
+    except Exception as e:
+        logger.error("While disconnecting, error")
+        logger.exception(e)
 
     user_dict.remove(user_id)
 
-    if joined_room is None:
-        return
-    ROOM_MANAGER.emit_room_changed(joined_room, user_dict)
+    if joined_room is not None:
+        ROOM_MANAGER.emit_room_changed(joined_room, user_dict)
 
 
 @event_on("name")
