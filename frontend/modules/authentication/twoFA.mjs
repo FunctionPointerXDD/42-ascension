@@ -61,7 +61,7 @@ export class TwoFA {
       if (text === "jwt.expired") {
         try {
           await JWT.getNewToken();
-          await JWT.sendOTPCodeToServer(otpCode);
+          await TwoFA.sendOTPCodeToServer(otpCode);
         } catch (e) {
           throw e;
         }
