@@ -9,10 +9,12 @@ if TYPE_CHECKING:
     from gameapp.match_objects.matchuser import RealUser
 
 
-WAITING_SEC = 10
+WAITING_SEC = 30
 
 
 class WaitingUsersJoin(threading.Thread):
+    logger = logging.getLogger(__name__)
+
     def __init__(self, users: "list[RealUser]", room_name: str):
         super().__init__()
         self.event = threading.Event()
@@ -26,13 +28,16 @@ class WaitingUsersJoin(threading.Thread):
         self.event.wait(WAITING_SEC)
         with self.lock:
             if not self.event.is_set():
+                self.logger.info("waiting process timeout! set ok to be false")
                 self.event.set()
                 self.ok = False
             ok = self.ok
 
         if ok:
+            self.logger.info(f"Waiting process ok, connect users={self.users}")
             connect_users(self.users)
         else:
+            self.logger.info(f"Waiting proceess not ok, disconnect users={self.users}")
             disconnect_users(self.room_name, self.users)
         waiting_dict.remove(self.room_name)
 
@@ -83,12 +88,15 @@ class Waiting:
             self.isonline[user_idx] = True
             self.users[user_idx] = user
             if self.online_cnt == 1:
+                self.logger.info("user connected, waiting process started")
                 self.waiting_join.start()
             if self.online_cnt == len(self.users):
+                self.logger.info("user connected, waiting stop and succeed")
                 self.waiting_join.stop()
 
     def user_disconnect(self, user: "RealUser"):
         with self.lock:
+            self.logger.error("user disconencted, waiting failed")
             return self.waiting_join.fail()
 
 

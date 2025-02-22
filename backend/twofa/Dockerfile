@@ -9,7 +9,8 @@ RUN python -m pip install \
     requests \
     logging \
     pyotp \
-    djangorestframework
+    djangorestframework \
+    gunicorn
 
 
 # Move Script File

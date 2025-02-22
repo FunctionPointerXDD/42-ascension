@@ -198,20 +198,19 @@ def on_connect(sid, auth):
         logger.error("cannot find waiting room! this is internal error")
         raise InternalException()
     waiting_room.user_join(user_dto)
-    # join_match(sid, match_user, username=user_name)
 
     room_user.is_online = True
     room_user.save()
 
 
 def on_disconnect(sid, reason):
-    # TODO: If reason is CLIENT_DISCONNECT, wait to be reconnected
-
     is_ai, user_id, user_name = _get_from_sess(sid)
     if is_ai:
         return
 
-    logger.info(f"disconnecting sid={sid}, user_id={user_id}, user_name={user_name}")
+    logger.info(
+        f"disconnecting reason={reason}, sid={sid}, user_id={user_id}, user_name={user_name}"
+    )
 
     user_dto = RealUser(is_ai=False, id=user_id, name=user_name, sid=sid)
 
@@ -242,7 +241,6 @@ def on_disconnect(sid, reason):
 
 def join_match_ai(sid: str, match_id: int):
     match_dict.ai_connected(match_id, sid)
-    # match_dict[match_id].ai_connected(sid)
 
 
 def on_paddle_move(sid: str, data: dict[str, Any]):
@@ -298,21 +296,13 @@ def init_matches(
         match_id1 = m1.id
         logger.info(f"match_id1={match_id1}")
         match_dict.set_if_not_exists(match_id1, Match(m1, is_with_ai=is_with_ai))
-        # with match_dict.lock:
-        #     if match_id1 not in match_dict.get_dict():
-        #         match_dict.get_dict()[match_id1] = Match(m1, is_with_ai=is_with_ai)
 
         match_id2 = m2.id
         logger.info(f"match_id2={match_id2}")
         match_dict.set_if_not_exists(match_id2, Match(m2, is_with_ai=is_with_ai))
-        # with match_dict.lock:
-        #     if match_id2 not in match_dict.get_dict():
-        #         match_dict.get_dict()[match_id2] = Match(m2, is_with_ai=is_with_ai)
 
         logger.info("adding listener")
         match_dict.add_listener(match_id1, match_id2)
-        # match_dict[match_id1].add_listener(match_dict[match_id2])
-        # match_dict[match_id2].add_listener(match_dict[match_id1])
 
     for u in users:
         match_id = u.temp_match.id
@@ -323,11 +313,6 @@ def init_matches(
         match_dict.set_if_not_exists(
             match_id, Match(u.temp_match, is_with_ai=is_with_ai)
         )
-        # with match_dict.lock:
-        #     if match_id not in match_dict.get_dict():
-        #         match_dict.get_dict()[match_id] = Match(
-        #             u.temp_match, is_with_ai=is_with_ai
-        #         )
 
         match_dict.user_decided(match_id, user)
 

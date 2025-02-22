@@ -38,3 +38,17 @@ def get_matchid_user_in(user_id: int) -> int:
         user_id=user_id, temp_match__round=user_min_match
     ).get()
     return match_user.temp_match.id
+
+
+def delete_match(match_id: int) -> None | int:
+    matches = TempMatch.objects.filter(id=match_id).all()
+    if len(matches) == 0:
+        return None
+
+    matchroom_id: int = matches[0].match_room_id  # type: ignore
+    matches.delete()
+    return matchroom_id
+
+
+def delete_matchroom(matchroom_id: int):
+    TempMatchRoom.objects.filter(id=matchroom_id).delete()

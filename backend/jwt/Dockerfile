@@ -9,7 +9,8 @@ RUN python -m pip install \
     requests \
     pyjwt \
     logging \
-    djangorestframework
+    djangorestframework \
+    gunicorn
 
 
 # Move Script File

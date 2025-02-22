@@ -1,4 +1,3 @@
-import json
 import logging
 import pickle
 import time
@@ -14,8 +13,6 @@ from ai.decorators import api_post
 from ai.requests import post
 from ai.utils import get_int
 from game_ai.envs import GAME_URL, JWT_URL
-
-# Create your views here.
 
 
 NAMESPACE = "/game"
@@ -75,7 +72,6 @@ class AiClient:
 
         @self.sio_event("updateBall")
         def updateBall(ball_data):
-            # logger.info(f"ai got updateBall, data={json.dumps(ball_data)}")
             if not self.sio.connected or self.paddle_id is None:
                 return
 
@@ -112,6 +108,12 @@ class AiClient:
         def gameOver(data):
             logger.info("ai got gameover")
             self.sio.disconnect()
+
+        @self.sio_event("disconnect")
+        def disconnect(reason):
+            logger.info(f"AI got disconnect event, reason={reason}")
+            client_list.remove(self)
+            logger.info(f"after disconnected, client list len = {len(client_list)}")
 
     def predict_ball_position(self, ball_data):
         ball_x = ball_data["x"]

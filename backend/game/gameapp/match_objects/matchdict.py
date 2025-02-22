@@ -2,6 +2,8 @@ from typing import TYPE_CHECKING
 import threading
 import logging
 
+from gameapp.db_utils import delete_match, delete_matchroom
+
 from .matchuser import get_aidto, MatchUser, RealUser
 
 
@@ -47,17 +49,17 @@ class MatchDict:
 
     def delete_match_id(self, match_id: int):
         self.logger.info(f"delete match id, id={match_id}")
-        # self.logger.info("delete match id, get lock")
         with self.lock:
             if match_id in self.match_dict_2:
                 del self.match_dict_2[match_id]
-        # self.logger.info("delete_match_id, get lock finished")
+
+        matchroom_id = delete_match(match_id)
+        if matchroom_id is not None:
+            delete_matchroom(matchroom_id)
 
     def clear(self):
-        # self.logger.info("clear, get lock")
         with self.lock:
             self.match_dict_2 = {}
-        # self.logger.info("clear, get lock finished")
 
     def user_decided(self, match_id: int, user: "RealUser"):
         self.logger.info("user_decided, got lock")
@@ -93,14 +95,10 @@ class MatchDict:
 
     def user_disconnected(self, match_id: int, dto: "RealUser"):
         mat = self.__get_match(match_id)
-        self.logger.info("match got")
         self.__del_connected_matchid(dto["sid"])
-        self.logger.info("del connected matchid done")
         mat.user_disconnected(dto)
 
     def get_room_by_user_dto(self, user_dto: "MatchUser") -> "Match | None":
-        # self.logger.info("get_room_by_user_dto, get lock")
-
         connected_matchid = self.__get_connected_matchid(user_dto["sid"])
         if connected_matchid is None:
             return None
