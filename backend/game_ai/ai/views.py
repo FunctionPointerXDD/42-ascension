@@ -1,4 +1,3 @@
-import json
 import logging
 import pickle
 import time
@@ -109,6 +108,12 @@ class AiClient:
         def gameOver(data):
             logger.info("ai got gameover")
             self.sio.disconnect()
+
+        @self.sio_event("disconnect")
+        def disconnect(reason):
+            logger.info(f"AI got disconnect event, reason={reason}")
+            client_list.remove(self)
+            logger.info(f"after disconnected, client list len = {len(client_list)}")
 
     def predict_ball_position(self, ball_data):
         ball_x = ball_data["x"]
