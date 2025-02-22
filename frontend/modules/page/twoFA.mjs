@@ -27,7 +27,15 @@ export class TwoFAPage {
           document.getElementById("otpUserNameInput").value
         );
 
-        const otpUrl = await TwoFA.sendOTPUserNameToServer(otpUserName);
+		let otpUrl;
+
+		try {
+        	otpUrl = await TwoFA.sendOTPUserNameToServer(otpUserName);
+		} catch(e) {
+			alert(e);
+			document.getElementById("otpUserNameInput").value = "";
+			return;
+		}
 
         const twoFAForm = document.getElementById("twoFAUserNameForm");
         twoFAForm.innerHTML = "";
