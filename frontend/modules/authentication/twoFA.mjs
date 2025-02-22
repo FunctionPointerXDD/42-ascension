@@ -23,7 +23,9 @@ export class TwoFA {
           alert(`${LOGIN_EXPIRED_MSG}(${e})`);
           logout();
         }
-      }
+      } else {
+		throw new Error(text);
+	  }
     }
   };
 
@@ -35,7 +37,7 @@ export class TwoFA {
       const json = await response.json();
       return json.name;
     } else {
-      const text = (await response).text();
+      const text = await response.text();
       if (response.status === 401 && text === "jwt.expired") {
         try {
           await JWT.getNewToken();
